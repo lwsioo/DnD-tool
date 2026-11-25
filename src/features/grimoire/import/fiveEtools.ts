@@ -5,6 +5,7 @@ import type { DamageType, Feet } from '@/domain/primitives';
 import type { Spell, SpellLevel, SpellSchool } from '@/domain/spells';
 import { newId } from '@/lib/id';
 import { normalizeKey } from '@/lib/normalizeKey';
+import { m } from '@/i18n';
 
 /**
  * Conversione degli incantesimi dal formato JSON di 5etools ({ "spell": [...] }) al modello di Codex.
@@ -348,7 +349,7 @@ export function convertFiveEtoolsFile(data: unknown): ConversionResult {
   list.forEach((raw, i) => {
     const spell = convertFiveEtoolsSpell(raw);
     if (spell) spells.push(spell);
-    else warnings.push(`Voce ${i + 1} ignorata: nome o livello mancanti.`);
+    else warnings.push(m.grimoire.skippedEntry(i + 1));
   });
   return { spells, warnings };
 }

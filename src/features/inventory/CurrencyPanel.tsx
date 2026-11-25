@@ -8,8 +8,10 @@ import type { CharacterRecipe } from '@/db/repos/characters';
 import { toast } from '@/stores/toastStore';
 import { Button } from '@/ui/Button';
 import { inputClass, NumberField, Select } from '@/ui/fields';
+import { m } from '@/i18n';
+import { LANG_TAG } from '@/i18n/locale';
 
-const gpFormat = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 });
+const gpFormat = new Intl.NumberFormat(LANG_TAG, { maximumFractionDigits: 2 });
 const COIN_OPTIONS = COINS_DESC.map((c) => ({ value: c, label: CURRENCY_LABELS[c].short }));
 
 interface CurrencyPanelProps {
@@ -41,17 +43,17 @@ export function CurrencyPanel({ character, mutate, mutateLater }: CurrencyPanelP
     const r = pay(cur, cp);
     if (!r.ok) return toast({ tone: 'error', message: r.error });
     mutate((d) => void (d.inventory.currency = r.currency));
-    toast({ tone: 'success', message: `Pagati ${cost} ${CURRENCY_LABELS[costCoin].short}.` });
+    toast({ tone: 'success', message: m.inventory.paid(cost, CURRENCY_LABELS[costCoin].short) });
     setCost('');
   };
 
   return (
-    <section aria-label="Monete" className="space-y-3 rounded-xl border border-line bg-panel p-4">
+    <section aria-label={m.inventory.coins} className="space-y-3 rounded-xl border border-line bg-panel p-4">
       <div className="flex items-center gap-2">
         <Coins className="size-4 text-accent" aria-hidden />
-        <h2 className="flex-1 text-[11px] font-semibold tracking-wider text-muted uppercase">Monete</h2>
-        <span className="text-sm" aria-label="Valore totale">
-          Totale: <strong>{gpFormat.format(totalGp(cur))} mo</strong>
+        <h2 className="flex-1 text-[11px] font-semibold tracking-wider text-muted uppercase">{m.inventory.coins}</h2>
+        <span className="text-sm" aria-label={m.inventory.totalValue}>
+          {m.inventory.total} <strong>{gpFormat.format(totalGp(cur))} {m.inventory.gp}</strong>
         </span>
       </div>
 
@@ -73,15 +75,15 @@ export function CurrencyPanel({ character, mutate, mutateLater }: CurrencyPanelP
       <div className="flex flex-wrap items-end gap-x-6 gap-y-3 text-sm">
         <div className="flex items-center gap-1.5">
           <input
-            aria-label="Quantità da cambiare"
+            aria-label={m.inventory.exchangeAmount}
             inputMode="numeric"
-            placeholder="Q.tà"
+            placeholder={m.inventory.qty}
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
             className={cn(inputClass, 'w-16')}
           />
           <Select
-            label="Moneta di partenza"
+            label={m.inventory.fromCoin}
             value={from}
             onValue={setFrom}
             options={COIN_OPTIONS}
@@ -89,43 +91,43 @@ export function CurrencyPanel({ character, mutate, mutateLater }: CurrencyPanelP
           />
           <ArrowRightLeft className="size-4 text-muted" aria-hidden />
           <Select
-            label="Moneta di arrivo"
+            label={m.inventory.toCoin}
             value={to}
             onValue={setTo}
             options={COIN_OPTIONS}
             className="w-auto"
           />
           <Button size="sm" onClick={doExchange} disabled={!amount || from === to}>
-            Cambia
+            {m.inventory.exchange}
           </Button>
         </div>
         <div className="flex items-center gap-1.5">
           <input
-            aria-label="Importo da pagare"
+            aria-label={m.inventory.payAmount}
             inputMode="decimal"
-            placeholder="Spesa"
+            placeholder={m.inventory.expense}
             value={cost}
             onChange={(e) => setCost(e.target.value)}
             className={cn(inputClass, 'w-20')}
           />
           <Select
-            label="Moneta della spesa"
+            label={m.inventory.payCoin}
             value={costCoin}
             onValue={setCostCoin}
             options={COIN_OPTIONS}
             className="w-auto"
           />
           <Button size="sm" onClick={doPay} disabled={!cost}>
-            Paga
+            {m.inventory.pay}
           </Button>
         </div>
         <Button
           size="sm"
           variant="ghost"
-          title="Converte tutto nel minor numero di monete (senza electrum)"
+          title={m.inventory.optimizeTitle}
           onClick={() => mutate((d) => void (d.inventory.currency = optimize(totalCp(d.inventory.currency))))}
         >
-          Ottimizza
+          {m.inventory.optimize}
         </Button>
       </div>
     </section>

@@ -13,6 +13,9 @@ import { EXPORT_SCHEMA_VERSION, ImportError } from './migrations';
 import { PRE_REPLACE_BACKUP_KEY, SETTING_KEYS } from './repos/settings';
 import { snapshotsRepo } from './repos/snapshots';
 import type { characterExportSchema, fullBackupSchema, libraryPackSchema } from './schemas';
+import { m } from '@/i18n';
+
+const D = m.misc.db;
 
 export { ImportError };
 
@@ -44,7 +47,7 @@ const envelope = () => ({
 /** File di un singolo personaggio, con gli incantesimi che usa (così è autosufficiente). */
 export async function buildCharacterExport(characterId: ID): Promise<CharacterExportFile> {
   const character = await db.characters.get(characterId);
-  if (!character) throw new Error('Personaggio non trovato');
+  if (!character) throw new Error(D.notFound);
   const spellIds = [...new Set(character.spellcasting.spells.map((s) => s.spellId))];
   const spells = (await db.spells.bulkGet(spellIds)).filter((s): s is Spell => !!s);
   return { ...envelope(), kind: 'character', data: { character, spells } };
@@ -81,7 +84,7 @@ export async function buildLibraryPack(): Promise<LibraryPackFile> {
 export function exportFileName(file: ParsedExport, date = new Date()): string {
   const day = date.toISOString().slice(0, 10);
   if (file.kind === 'character') return `codex-${slug(file.data.character.identity.name)}-${day}.json`;
-  return file.kind === 'library' ? `codex-contenuti-${day}.json` : `codex-backup-${day}.json`;
+  return file.kind === 'library' ? `codex-${D.contentFile}-${day}.json` : `codex-backup-${day}.json`;
 }
 
 // ── Pianificazione (anteprima) ──────────────────────────────────────────────────────────
@@ -200,7 +203,7 @@ export async function planImport(file: ParsedExport): Promise<ImportPlan> {
     return {
       kind: 'character',
       file,
-      existingName: existing ? existing.identity.name || 'Senza nome' : null,
+      existingName: existing ? existing.identity.name || m.common.unnamed : null,
       spells: {
         total: spells.length,
         alreadyPresent: resolution.alreadyPresent,
@@ -248,9 +251,9 @@ export async function applyCharacterImport(
 
       if (await db.characters.get(c.id)) {
         if (mode === 'replace') {
-          await snapshotsRepo.take(c.id, 'Prima dell’import');
+          await snapshotsRepo.take(c.id, D.beforeImport);
         } else {
-          c = { ...c, id: newId(), identity: { ...c.identity, name: `${c.identity.name} (copia)` } };
+          c = { ...c, id: newId(), identity: { ...c.identity, name: D.copy(c.identity.name) } };
         }
       }
       await db.characters.put(c);

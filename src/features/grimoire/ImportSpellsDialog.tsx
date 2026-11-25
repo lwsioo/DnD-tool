@@ -9,6 +9,7 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { convertFiveEtoolsFile, isFiveEtoolsFile } from './import/fiveEtools';
 import { spellLevelLine } from './spellText';
+import { m } from '@/i18n';
 
 interface Candidate {
   spell: Spell;
@@ -38,12 +39,10 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
     try {
       data = JSON.parse(await readFileText(file));
     } catch {
-      return setError('Il file non è un JSON valido.');
+      return setError(m.grimoire.invalidJson);
     }
     if (!isFiveEtoolsFile(data)) {
-      return setError(
-        'Nessun incantesimo riconosciuto: serve un file 5etools con la forma { "spell": [ … ] }.',
-      );
+      return setError(m.grimoire.noSpellsFound);
     }
     const { spells, warnings: w } = convertFiveEtoolsFile(data);
     const existing = await db.spells.toArray();
@@ -70,16 +69,16 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
     <Dialog
       open
       onClose={onClose}
-      title="Importa incantesimi (5etools)"
+      title={m.grimoire.importTitle}
       size="lg"
       footer={
         candidates && (
           <>
             <Button variant="ghost" onClick={() => setCandidates(null)}>
-              Scegli un altro file
+              {m.grimoire.otherFile}
             </Button>
             <Button variant="primary" disabled={selected.length === 0 || busy} onClick={() => void confirm()}>
-              Importa {selected.length}
+              {m.grimoire.importN(selected.length)}
             </Button>
           </>
         )
@@ -92,16 +91,16 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
             className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-line p-8 text-center hover:border-accent/50"
           >
             <FileUp className="size-8 text-accent" aria-hidden />
-            <span className="font-medium">Scegli un file JSON di incantesimi</span>
+            <span className="font-medium">{m.grimoire.chooseSpellFile}</span>
             <span className="text-xs text-muted">
-              Formato 5etools: {'{ "spell": [ … ] }'}. Il file resta sul tuo dispositivo.
+              {m.grimoire.formatHint}
             </span>
           </label>
           <input
             id={inputId}
             type="file"
             accept="application/json,.json"
-            aria-label="File di incantesimi"
+            aria-label={m.grimoire.spellFile}
             className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -118,9 +117,7 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-muted">
-            {candidates.length} incantesimi trovati, {candidates.filter((c) => c.duplicate).length} già nella
-            libreria (deselezionati). Nomi e testi restano come nel file: puoi tradurli modificandoli dalla
-            libreria.
+            {m.grimoire.foundSummary(candidates.length, candidates.filter((c) => c.duplicate).length)}
           </p>
           {warnings.length > 0 && <p className="text-xs text-danger">{warnings.join(' ')}</p>}
           <div className="flex gap-3 text-xs">
@@ -129,14 +126,14 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
               className="text-accent hover:underline"
               onClick={() => setCandidates(candidates.map((c) => ({ ...c, selected: true })))}
             >
-              Seleziona tutti
+              {m.grimoire.selectAll}
             </button>
             <button
               type="button"
               className="text-accent hover:underline"
               onClick={() => setCandidates(candidates.map((c) => ({ ...c, selected: false })))}
             >
-              Nessuno
+              {m.grimoire.selectNone}
             </button>
           </div>
           <ul className="max-h-80 divide-y divide-line overflow-y-auto">
@@ -159,7 +156,7 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
                       {c.spell.sourceBook && ` · ${c.spell.sourceBook}`}
                     </span>
                   </span>
-                  {c.duplicate && <span className="text-xs text-muted">già presente</span>}
+                  {c.duplicate && <span className="text-xs text-muted">{m.grimoire.alreadyPresent}</span>}
                 </label>
               </li>
             ))}
@@ -171,7 +168,7 @@ export function ImportSpellsDialog({ canAddToCharacter, onImported, onClose }: I
                 checked={addToCharacter}
                 onChange={(e) => setAddToCharacter(e.target.checked)}
               />
-              Aggiungi anche al grimorio del personaggio (come conosciuti)
+              {m.grimoire.addToCharacter}
             </label>
           )}
         </div>

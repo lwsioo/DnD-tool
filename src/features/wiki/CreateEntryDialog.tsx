@@ -9,6 +9,7 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { FieldLabel, inputClass, Select } from '@/ui/fields';
 import { CATEGORY_INFO, CATEGORY_ORDER, entryPath } from './categories';
+import { m } from '@/i18n';
 
 interface CreateEntryDialogProps {
   campaignId: ID;
@@ -54,15 +55,15 @@ export function CreateEntryDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Nuova voce"
+      title={m.wiki.newEntry}
       size="sm"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Annulla
+            {m.common.cancel}
           </Button>
           <Button variant="primary" disabled={!title.trim()} onClick={() => void create()}>
-            Crea
+            {m.wiki.create}
           </Button>
         </>
       }
@@ -74,18 +75,18 @@ export function CreateEntryDialog({
           if (title.trim()) void create();
         }}
       >
-        <FieldLabel label="Titolo">
+        <FieldLabel label={m.wiki.title}>
           <input
-            aria-label="Titolo"
+            aria-label={m.wiki.title}
             data-autofocus
             className={inputClass}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </FieldLabel>
-        <FieldLabel label="Categoria">
+        <FieldLabel label={m.wiki.category}>
           <Select
-            label="Categoria"
+            label={m.wiki.category}
             value={category}
             onValue={setCategory}
             options={CATEGORY_ORDER.map((c) => ({ value: c, label: CATEGORY_INFO[c].singular }))}

@@ -1,5 +1,6 @@
 import type { Character } from '@/domain/character';
 import type { ID } from '@/domain/primitives';
+import { LOCALE, m, setLocale } from '@/i18n';
 import { normalizeKey } from '@/lib/normalizeKey';
 
 export interface Command {
@@ -21,77 +22,32 @@ export interface CommandContext {
   exportBackup: () => void;
 }
 
+const C = m.search.commands;
+/** Etichetta e parole chiave di un comando, dal dizionario della lingua attiva. */
+const text = ([label, keywords]: string[]) => ({ label: label!, keywords });
+
 /** Comandi della palette (prefisso `>`), solo quelli sensati nello stato attuale. */
 export function buildCommands(ctx: CommandContext): Command[] {
   const pg = ctx.active ? `/pg/${ctx.active.id}` : null;
   const list: Array<Command | false> = [
-    !!pg && {
-      id: 'go-sheet',
-      label: 'Vai alla Scheda',
-      keywords: 'personaggio',
-      run: () => ctx.navigate(`${pg}/scheda`),
-    },
-    !!pg && {
-      id: 'go-grimoire',
-      label: 'Vai al Grimorio',
-      keywords: 'incantesimi magia',
-      run: () => ctx.navigate(`${pg}/grimorio`),
-    },
-    !!pg && {
-      id: 'go-inventory',
-      label: 'Vai all’Inventario',
-      keywords: 'oggetti monete',
-      run: () => ctx.navigate(`${pg}/inventario`),
-    },
-    {
-      id: 'go-wiki',
-      label: 'Vai alla Campagna Wiki',
-      keywords: 'note',
-      run: () => ctx.navigate(`/campagna/${ctx.campaignId ?? ''}`),
-    },
-    {
-      id: 'go-compendium',
-      label: 'Apri il Compendio',
-      keywords: 'regole condizioni armi',
-      run: () => ctx.navigate('/compendio'),
-    },
-    {
-      id: 'go-settings',
-      label: 'Apri le Impostazioni',
-      keywords: 'backup unità',
-      run: () => ctx.navigate('/impostazioni'),
-    },
-    !!ctx.active && {
-      id: 'rest-short',
-      label: 'Riposo Breve',
-      keywords: 'dadi vita',
-      run: () => ctx.openRest('short'),
-    },
-    !!ctx.active && {
-      id: 'rest-long',
-      label: 'Riposo Lungo',
-      keywords: 'dormire',
-      run: () => ctx.openRest('long'),
-    },
-    !!ctx.campaignId && {
-      id: 'new-entry',
-      label: 'Nuova voce wiki',
-      keywords: 'npc luogo fazione sessione',
-      run: ctx.createWikiEntry,
-    },
-    {
-      id: 'new-character',
-      label: 'Nuovo personaggio',
-      keywords: 'crea importa esempio',
-      run: () => ctx.navigate('/benvenuto'),
-    },
+    !!pg && { id: 'go-sheet', ...text(C.goSheet), run: () => ctx.navigate(`${pg}/scheda`) },
+    !!pg && { id: 'go-grimoire', ...text(C.goGrimoire), run: () => ctx.navigate(`${pg}/grimorio`) },
+    !!pg && { id: 'go-inventory', ...text(C.goInventory), run: () => ctx.navigate(`${pg}/inventario`) },
+    { id: 'go-wiki', ...text(C.goWiki), run: () => ctx.navigate(`/campagna/${ctx.campaignId ?? ''}`) },
+    { id: 'go-compendium', ...text(C.goCompendium), run: () => ctx.navigate('/compendio') },
+    { id: 'go-settings', ...text(C.goSettings), run: () => ctx.navigate('/impostazioni') },
+    !!ctx.active && { id: 'rest-short', ...text(C.restShort), run: () => ctx.openRest('short') },
+    !!ctx.active && { id: 'rest-long', ...text(C.restLong), run: () => ctx.openRest('long') },
+    !!ctx.campaignId && { id: 'new-entry', ...text(C.newEntry), run: ctx.createWikiEntry },
+    { id: 'new-character', ...text(C.newCharacter), run: () => ctx.navigate('/benvenuto') },
     {
       id: 'theme',
-      label: ctx.theme === 'dark' ? 'Tema chiaro' : 'Tema scuro',
-      keywords: 'colori',
+      label: ctx.theme === 'dark' ? C.lightTheme : C.darkTheme,
+      keywords: C.themeKeywords,
       run: ctx.toggleTheme,
     },
-    { id: 'export-backup', label: 'Esporta backup completo', keywords: 'salva json', run: ctx.exportBackup },
+    { id: 'export-backup', ...text(C.exportBackup), run: ctx.exportBackup },
+    { id: 'language', ...text(C.language), run: () => setLocale(LOCALE === 'it' ? 'en' : 'it') },
   ];
   return list.filter((c): c is Command => !!c);
 }

@@ -5,7 +5,13 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'coverage'] },
+  { ignores: ['dist', 'node_modules', 'coverage', 'release'] },
+  // App desktop (Electron): codice Node in CommonJS.
+  {
+    files: ['electron/**/*.cjs'],
+    extends: [js.configs.recommended],
+    languageOptions: { ecmaVersion: 2023, sourceType: 'commonjs', globals: globals.node },
+  },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

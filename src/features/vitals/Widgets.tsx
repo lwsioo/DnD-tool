@@ -7,6 +7,7 @@ import { UsesCounter } from '@/ui/Pips';
 import { BreakdownContent } from '@/features/sheet/parts';
 import { setEquipped } from '@/features/inventory/itemActions';
 import { useVitals } from './VitalsContext';
+import { m } from '@/i18n';
 
 function Card({
   label,
@@ -78,14 +79,14 @@ export function AcWidget() {
   const toggle = (item: InventoryItem) => mutate((d) => setEquipped(d, item.id, !item.equipped));
   return (
     <Card
-      label="Classe Armatura"
+      label={m.vitals.armorClass}
       icon={<Shield className="size-3.5 text-accent" aria-hidden />}
       right={
         <HoverCard content={<BreakdownContent breakdown={derived.ac} signed={false} />}>
           <span
             tabIndex={0}
             className="cursor-help font-display text-xl tabular-nums"
-            aria-label={`Classe Armatura ${derived.ac.total}`}
+            aria-label={m.vitals.acAria(derived.ac.total)}
           >
             {derived.ac.total}
           </span>
@@ -113,13 +114,13 @@ export function AcWidget() {
         </div>
       )}
       {derived.ac.shieldIgnored && (
-        <p className="mt-1 text-[11px] text-danger">Scudo senza addestramento: nessun bonus.</p>
+        <p className="mt-1 text-[11px] text-danger">{m.vitals.shieldIgnored}</p>
       )}
     </Card>
   );
 }
 
-const ORDINAL = ['1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°'];
+const ORDINAL = Array.from({ length: 9 }, (_, i) => m.vitals.ordinal(i + 1));
 
 /** Slot incantesimo standard e del Patto, spendibili con un clic. */
 export function SlotsWidget() {
@@ -129,13 +130,13 @@ export function SlotsWidget() {
   if (levels.length === 0 && !pact) return null;
 
   return (
-    <Card label="Slot incantesimo" icon={<Zap className="size-3.5 text-accent" aria-hidden />}>
+    <Card label={m.vitals.slots} icon={<Zap className="size-3.5 text-accent" aria-hidden />}>
       <div className="mt-2 space-y-1">
         {levels.map((s) => (
           <div key={s.level} className="flex items-center gap-2">
             <span className="w-6 text-xs text-muted">{ORDINAL[s.level - 1]}</span>
             <UsesCounter
-              label={`Slot di ${ORDINAL[s.level - 1]} livello`}
+              label={m.vitals.slotOfLevel(s.level)}
               max={s.max}
               used={s.used}
               onUsed={(used) => mutate((d) => void (d.spellcasting.slots.used[s.level - 1] = used))}
@@ -143,10 +144,10 @@ export function SlotsWidget() {
           </div>
         ))}
         {pact && (
-          <div className="flex items-center gap-2" title={`Slot del Patto di ${pact.slotLevel}° livello`}>
+          <div className="flex items-center gap-2" title={m.vitals.pactSlotTitle(pact.slotLevel)}>
             <span className="w-6 text-xs text-accent">P{pact.slotLevel}</span>
             <UsesCounter
-              label="Slot del Patto"
+              label={m.vitals.pactSlots}
               max={pact.max}
               used={pact.used}
               onUsed={(used) => mutate((d) => void (d.spellcasting.pact = { used }))}
@@ -167,11 +168,11 @@ export function ConcentrationRow() {
     <div className="mt-2 flex items-center gap-1.5 rounded border border-accent/40 bg-accent-soft/50 px-2 py-1 text-xs">
       <Brain className="size-3.5 text-accent" aria-hidden />
       <span className="flex-1 truncate">
-        Concentrazione: <strong>{(cs && spellNames.get(cs.spellId)) ?? 'incantesimo'}</strong>
+        {m.vitals.concentration} <strong>{(cs && spellNames.get(cs.spellId)) ?? m.vitals.spell}</strong>
       </span>
       <button
         type="button"
-        aria-label="Termina la concentrazione"
+        aria-label={m.vitals.endConcentration}
         onClick={() => mutate((d) => void delete d.combat.concentration)}
         className="text-muted hover:text-ink"
       >
@@ -187,7 +188,7 @@ export function ResourcesWidget() {
   const pinned = derived.resources.filter((r) => r.pinned && !r.formulaError && r.max > 0);
   if (pinned.length === 0) return null;
   return (
-    <Card label="Risorse" icon={<Zap className="size-3.5 text-accent" aria-hidden />}>
+    <Card label={m.vitals.resources} icon={<Zap className="size-3.5 text-accent" aria-hidden />}>
       <ul className="mt-2 space-y-1.5">
         {pinned.map((r) => (
           <li key={r.id} className="space-y-0.5">

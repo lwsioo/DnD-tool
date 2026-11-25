@@ -7,6 +7,7 @@ import { multiplyDice } from '@/lib/dice';
 import { addParts, rollModeFor } from './effects';
 import { evaluateOr, type FormulaVars } from './formula';
 import type { ActiveEffect, Breakdown, Part, RollModeInfo } from './types';
+import { m } from '@/i18n';
 
 export interface SpellcastingStat {
   sourceId: ID;
@@ -30,16 +31,16 @@ export function computeSpellcasting(
 ): SpellcastingStat[] {
   return c.spellcasting.sources.map((src) => {
     const mod = mods[src.ability];
-    const modPart: Part = { label: `Mod. ${ABILITY_LABELS[src.ability].short}`, value: mod };
+    const modPart: Part = { label: m.engine.mod(ABILITY_LABELS[src.ability].short), value: mod };
     const dcParts: Part[] = [
-      { label: 'Base', value: 8 },
-      { label: 'Competenza', value: pb },
+      { label: m.engine.base, value: 8 },
+      { label: m.engine.proficiency, value: pb },
       modPart,
       ...addParts(effects, ['spell.dc'], vars),
     ];
     const attackTargets = ['spell.attack', 'attack.all', 'd20.all'] as const;
     const attackParts: Part[] = [
-      { label: 'Competenza', value: pb },
+      { label: m.engine.proficiency, value: pb },
       modPart,
       ...addParts(effects, attackTargets, vars),
     ];

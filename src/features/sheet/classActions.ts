@@ -2,6 +2,7 @@ import type { Draft } from 'immer';
 import type { ClassBase } from '@/data/srd/classes';
 import type { Character, ClassEntry } from '@/domain/character';
 import { newId } from '@/lib/id';
+import { m } from '@/i18n';
 
 /**
  * Aggiunge una classe. Se è la prima classe del personaggio applica anche ciò che la classe
@@ -14,7 +15,7 @@ export function addClass(d: Draft<Character>, base: ClassBase | null): ClassEntr
     : {
         id: newId(),
         classKey: `custom-${Date.now()}`,
-        name: 'Nuova classe',
+        name: m.sheet.newClass,
         level: 1,
         hitDie: 8,
         caster: 'none',

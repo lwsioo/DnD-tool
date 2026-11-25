@@ -1,6 +1,6 @@
 import { ABILITIES } from '@/domain/abilities';
 import type { Effect } from '@/domain/effects';
-import type { RuleEntry } from './types';
+import { localizeRules, type RuleEntry, type RuleTextEn } from './types';
 
 export const CONDITION_KEYS = [
   'blinded',
@@ -38,7 +38,7 @@ const allChecks = (op: 'disadvantage' | 'advantage') =>
 const speedZero = { target: 'speed', op: 'set', value: '0' } as const;
 const initiativeDisadvantage = { target: 'initiative', op: 'disadvantage' } as const;
 
-export const CONDITIONS: Record<ConditionKey, ConditionEntry> = {
+const CONDITIONS_IT: Record<ConditionKey, ConditionEntry> = {
   blinded: {
     key: 'blinded',
     name: 'Accecato',
@@ -208,3 +208,106 @@ _La scheda applica lo svantaggio finché la condizione è attiva: disattivala qu
     ]),
   },
 };
+
+/** Testi inglesi (SRD 5.2, riassunti). */
+const CONDITIONS_EN: Record<ConditionKey, RuleTextEn> = {
+  blinded: {
+    summary: "You can't see; your attacks have disadvantage, attacks against you have advantage.",
+    body: `- **Can't see:** you automatically fail any ability check that requires sight.
+- **Attacks:** attack rolls against you have advantage; your attack rolls have disadvantage.`,
+  },
+  charmed: {
+    summary: "You can't attack the charmer; it has advantage on social checks with you.",
+    body: `- **Can't harm the charmer:** you can't attack the charmer or target it with damaging abilities or magical effects.
+- **Social advantage:** the charmer has advantage on any ability check to interact with you socially.`,
+  },
+  deafened: {
+    summary: "You can't hear and fail checks that require hearing.",
+    body: `- **Can't hear:** you automatically fail any ability check that requires hearing.`,
+  },
+  exhaustion: {
+    summary: 'Cumulative levels: −2 per level to d20 tests, −5 ft of speed per level.',
+    body: `Exhaustion is cumulative, from 1 to 6 levels. Track it with its own counter on the sheet, not as a simple condition.
+
+- **d20 tests:** you take −2 × your Exhaustion level.
+- **Speed:** reduced by 5 feet × your Exhaustion level.
+- **Level 6:** you die.
+- **Recovery:** finishing a Long Rest removes 1 Exhaustion level.`,
+  },
+  frightened: {
+    summary: 'Disadvantage on checks and attacks while you can see the source of your fear.',
+    body: `- **Checks and attacks:** you have disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
+- **Can't approach:** you can't willingly move closer to the source of fear.
+
+_The sheet applies the disadvantage while the condition is active: turn it off when the source is out of sight._`,
+  },
+  grappled: {
+    summary: 'Speed 0; disadvantage on attacks against anyone other than the grappler.',
+    body: `- **Speed 0:** your speed is 0 and can't increase.
+- **Attacks:** you have disadvantage on attack rolls against any target other than the grappler.
+- **Movable:** the grappler can drag or carry you when it moves, spending extra movement.`,
+  },
+  incapacitated: {
+    summary: 'No actions, Bonus Actions or Reactions; concentration is broken.',
+    body: `- **Inactive:** you can't take any action, Bonus Action or Reaction.
+- **No concentration:** your concentration is broken.
+- **Speechless:** you can't speak.
+- **Surprised:** if you're Incapacitated when you roll Initiative, you have disadvantage on the roll.`,
+  },
+  invisible: {
+    summary: 'Advantage on Initiative and on your attacks; attacks against you have disadvantage.',
+    body: `- **Surprise:** if you're Invisible when you roll Initiative, you have advantage on the roll.
+- **Concealed:** you aren't affected by any effect that requires its target to be seen, unless the effect's creator can somehow see you. Any equipment you wear or carry is also concealed.
+- **Attacks:** attack rolls against you have disadvantage, and your attack rolls have advantage. If a creature can somehow see you, you don't gain these benefits against it.`,
+  },
+  paralyzed: {
+    summary: 'Incapacitated, speed 0, fails STR and DEX saves; close hits are critical.',
+    body: `- [Incapacitated](cond:incapacitated).
+- **Speed 0:** your speed is 0 and can't increase.
+- **Saving throws:** you automatically fail Strength and Dexterity saving throws.
+- **Attacks:** attack rolls against you have advantage.
+- **Automatic critical hits:** any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.`,
+  },
+  petrified: {
+    summary: 'Turned to inanimate substance; incapacitated, resistance to all damage.',
+    body: `- **Turned to inanimate substance:** you are transformed, along with any nonmagical objects you are wearing or carrying, into a solid inanimate substance (usually stone). Your weight increases tenfold, and you cease aging.
+- [Incapacitated](cond:incapacitated).
+- **Speed 0:** your speed is 0 and can't increase.
+- **Attacks:** attack rolls against you have advantage.
+- **Saving throws:** you automatically fail Strength and Dexterity saving throws.
+- **Resistance:** you have resistance to all damage.
+- **Poison immunity:** you have immunity to the [Poisoned](cond:poisoned) condition.`,
+  },
+  poisoned: {
+    summary: 'Disadvantage on attack rolls and ability checks.',
+    body: `- **Checks and attacks:** you have disadvantage on attack rolls and ability checks.`,
+  },
+  prone: {
+    summary: 'On the ground: disadvantage on your attacks; close attackers have advantage.',
+    body: `- **Restricted movement:** you can only crawl, or spend half your speed (round down) to stand up.
+- **Attacks:** you have disadvantage on attack rolls. An attack roll against you has advantage if the attacker is within 5 feet of you; otherwise it has disadvantage.`,
+  },
+  restrained: {
+    summary: 'Speed 0; disadvantage on your attacks and on Dexterity saves.',
+    body: `- **Speed 0:** your speed is 0 and can't increase.
+- **Attacks:** attack rolls against you have advantage, and your attack rolls have disadvantage.
+- **Saving throws:** you have disadvantage on Dexterity saving throws.`,
+  },
+  stunned: {
+    summary: 'Incapacitated, fails STR and DEX saves; attacks against you have advantage.',
+    body: `- [Incapacitated](cond:incapacitated).
+- **Saving throws:** you automatically fail Strength and Dexterity saving throws.
+- **Attacks:** attack rolls against you have advantage.`,
+  },
+  unconscious: {
+    summary: 'Incapacitated and Prone, drops what it holds; close hits are critical.',
+    body: `- **Inert:** you are [Incapacitated](cond:incapacitated) and [Prone](cond:prone), and you drop whatever you're holding. When this condition ends, you remain Prone.
+- **Speed 0:** your speed is 0 and can't increase.
+- **Attacks:** attack rolls against you have advantage.
+- **Saving throws:** you automatically fail Strength and Dexterity saving throws.
+- **Automatic critical hits:** any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.
+- **Unaware:** you're unaware of your surroundings.`,
+  },
+};
+
+export const CONDITIONS: Record<ConditionKey, ConditionEntry> = localizeRules(CONDITIONS_IT, CONDITIONS_EN);

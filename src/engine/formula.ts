@@ -1,3 +1,4 @@
+import { m as msg } from '@/i18n';
 /**
  * Parser sicuro per le formule della scheda (niente eval).
  *
@@ -60,7 +61,7 @@ function tokenize(src: string): Token[] {
       i++;
     } else if (/[0-9.]/.test(ch)) {
       const m = /^\d*\.?\d+/.exec(src.slice(i));
-      if (!m) throw new FormulaError(`Numero non valido vicino a "${src.slice(i, i + 5)}"`, src);
+      if (!m) throw new FormulaError(msg.engine.formula.badNumber(src.slice(i, i + 5)), src);
       tokens.push({ t: 'num', v: Number(m[0]) });
       i += m[0].length;
     } else if (/[a-zA-Z_]/.test(ch)) {
@@ -74,7 +75,7 @@ function tokenize(src: string): Token[] {
       tokens.push({ t: ch });
       i++;
     } else {
-      throw new FormulaError(`Carattere non ammesso: "${ch}"`, src);
+      throw new FormulaError(msg.engine.formula.badChar(ch), src);
     }
   }
   return tokens;
@@ -93,16 +94,16 @@ function resolveVariable(name: string, vars: FormulaVars, src: string): number {
   if (name === 'pb' || name === 'bc') return vars.pb;
   if (name === 'lvl' || name === 'liv') return vars.lvl;
   const dot = name.indexOf('.');
-  if (dot < 0) throw new FormulaError(`Variabile sconosciuta: "${name}"`, src);
+  if (dot < 0) throw new FormulaError(msg.engine.formula.unknownVar(name), src);
   const head = name.slice(0, dot);
   const rest = name.slice(dot + 1);
   if ((head === 'lvl' || head === 'liv') && rest) return vars.classLevels[rest] ?? 0;
   if (head === 'mod' || head === 'score') {
     const ability = ABILITY_ALIASES[rest];
-    if (!ability) throw new FormulaError(`Caratteristica sconosciuta: "${rest}"`, src);
+    if (!ability) throw new FormulaError(msg.engine.formula.unknownAbility(rest), src);
     return (head === 'mod' ? vars.mods : vars.scores)[ability] ?? 0;
   }
-  throw new FormulaError(`Variabile sconosciuta: "${name}"`, src);
+  throw new FormulaError(msg.engine.formula.unknownVar(name), src);
 }
 
 /** Valuta una formula. Lancia FormulaError se non è valida. */
@@ -114,7 +115,7 @@ export function evaluateFormula(src: string, vars: FormulaVars): number {
 
   const expect = (t: Token['t']) => {
     const tok = next();
-    if (tok?.t !== t) throw new FormulaError(`Atteso "${t}"`, src);
+    if (tok?.t !== t) throw new FormulaError(msg.engine.formula.expected(t), src);
   };
 
   function expr(): number {
@@ -131,7 +132,7 @@ export function evaluateFormula(src: string, vars: FormulaVars): number {
     for (let tok = peek(); tok?.t === 'op' && (tok.v === '*' || tok.v === '/'); tok = peek()) {
       next();
       const rhs = unary();
-      if (tok.v === '/' && rhs === 0) throw new FormulaError('Divisione per zero', src);
+      if (tok.v === '/' && rhs === 0) throw new FormulaError(msg.engine.formula.divByZero, src);
       value = tok.v === '*' ? value * rhs : value / rhs;
     }
     return value;
@@ -148,7 +149,7 @@ export function evaluateFormula(src: string, vars: FormulaVars): number {
 
   function primary(): number {
     const tok = next();
-    if (!tok) throw new FormulaError('Formula incompleta', src);
+    if (!tok) throw new FormulaError(msg.engine.formula.incomplete, src);
     if (tok.t === 'num') return tok.v;
     if (tok.t === '(') {
       const value = expr();
@@ -158,7 +159,7 @@ export function evaluateFormula(src: string, vars: FormulaVars): number {
     if (tok.t === 'id') {
       if (peek()?.t === '(') {
         const fn = FUNCTIONS[tok.v];
-        if (!fn) throw new FormulaError(`Funzione sconosciuta: "${tok.v}"`, src);
+        if (!fn) throw new FormulaError(msg.engine.formula.unknownFn(tok.v), src);
         next();
         const args: number[] = [];
         if (peek()?.t !== ')') {
@@ -169,18 +170,18 @@ export function evaluateFormula(src: string, vars: FormulaVars): number {
           }
         }
         expect(')');
-        if (args.length === 0) throw new FormulaError(`"${tok.v}" richiede almeno un argomento`, src);
+        if (args.length === 0) throw new FormulaError(msg.engine.formula.needsArg(tok.v), src);
         return fn(args);
       }
       return resolveVariable(tok.v, vars, src);
     }
-    throw new FormulaError('Espressione non valida', src);
+    throw new FormulaError(msg.engine.formula.invalid, src);
   }
 
-  if (tokens.length === 0) throw new FormulaError('Formula vuota', src);
+  if (tokens.length === 0) throw new FormulaError(msg.engine.formula.empty, src);
   const result = expr();
-  if (pos < tokens.length) throw new FormulaError('Testo in eccesso alla fine della formula', src);
-  if (!Number.isFinite(result)) throw new FormulaError('Risultato non finito', src);
+  if (pos < tokens.length) throw new FormulaError(msg.engine.formula.trailing, src);
+  if (!Number.isFinite(result)) throw new FormulaError(msg.engine.formula.notFinite, src);
   return result;
 }
 

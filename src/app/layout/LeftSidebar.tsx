@@ -16,6 +16,7 @@ import { IconButton } from '@/ui/IconButton';
 import { useUiStore } from '@/stores/uiStore';
 import { CharacterSwitcher } from './CharacterSwitcher';
 import { VitalsPanel } from '@/features/vitals/VitalsPanel';
+import { m } from '@/i18n';
 
 interface NavItem {
   label: string;
@@ -39,15 +40,15 @@ export function LeftSidebar() {
   const base = character ? `/pg/${character.id}` : null;
 
   const nav: NavItem[] = [
-    { label: 'Scheda', icon: ScrollText, to: base && `${base}/scheda` },
-    { label: 'Grimorio', icon: Sparkles, to: base && `${base}/grimorio` },
-    { label: 'Campagna Wiki', icon: BookOpen, to: `/campagna/${character?.campaignId ?? ''}` },
-    { label: 'Inventario', icon: Backpack, to: base && `${base}/inventario` },
+    { label: m.app.nav.sheet, icon: ScrollText, to: base && `${base}/scheda` },
+    { label: m.app.nav.grimoire, icon: Sparkles, to: base && `${base}/grimorio` },
+    { label: m.app.nav.wiki, icon: BookOpen, to: `/campagna/${character?.campaignId ?? ''}` },
+    { label: m.app.nav.inventory, icon: Backpack, to: base && `${base}/inventario` },
   ];
 
   return (
     <aside
-      aria-label="Barra laterale"
+      aria-label={m.app.nav.sidebar}
       className={cn(
         'w-[260px] shrink-0 flex-col border-r border-line bg-panel lg:flex',
         // Sotto 1024 px è a scomparsa e si apre sopra il contenuto.
@@ -64,7 +65,7 @@ export function LeftSidebar() {
           <CharacterSwitcher />
         </div>
 
-        <nav aria-label="Sezioni" data-tour="nav" className="space-y-0.5">
+        <nav aria-label={m.app.nav.sections} data-tour="nav" className="space-y-0.5">
           {nav.map(({ to, label, icon: Icon }) =>
             to ? (
               <NavLink key={label} to={to} className={navItemClass}>
@@ -75,7 +76,7 @@ export function LeftSidebar() {
               <span
                 key={label}
                 aria-disabled="true"
-                title="Crea o seleziona un personaggio"
+                title={m.app.nav.needCharacter}
                 className="flex cursor-not-allowed items-center gap-2.5 px-2.5 py-1.5 text-sm text-muted/50"
               >
                 <Icon className="size-4" aria-hidden />
@@ -92,16 +93,16 @@ export function LeftSidebar() {
 
       <div className="shrink-0 border-t border-line px-2 pt-2">
         <NavLink to="/compendio" data-tour="compendium" className={navItemClass}>
-          <Library className="size-4" aria-hidden /> Compendio
+          <Library className="size-4" aria-hidden /> {m.app.nav.compendium}
         </NavLink>
       </div>
       <div className="flex shrink-0 items-center gap-1 p-2 pt-0.5">
         <NavLink to="/impostazioni" data-tour="settings" className={(s) => cn(navItemClass(s), 'flex-1')}>
-          <Settings className="size-4" aria-hidden /> Impostazioni
+          <Settings className="size-4" aria-hidden /> {m.app.nav.settings}
         </NavLink>
         <IconButton
           icon={theme === 'dark' ? Sun : Moon}
-          label={theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'}
+          label={theme === 'dark' ? m.app.nav.lightTheme : m.app.nav.darkTheme}
           onClick={toggleTheme}
         />
       </div>

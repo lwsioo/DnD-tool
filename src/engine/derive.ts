@@ -15,6 +15,7 @@ import { computeSpeed, type SpeedResult } from './speed';
 import { computeSpellcasting, type SpellcastingStat } from './spellcasting';
 import { computeSlots, type SlotsResult } from './spellSlots';
 import type { ActiveEffect, Breakdown, DeriveContext, RollStat } from './types';
+import { m } from '@/i18n';
 
 export interface ResourceStat {
   kind: 'feature' | 'spell';
@@ -95,7 +96,7 @@ export function deriveCharacter(
   ) => {
     const max = Math.max(0, Math.floor(evaluateOr(t.max, vars, NaN)));
     const formulaError = Number.isNaN(max);
-    if (formulaError) warnings.push(`Formula non valida per "${name}": ${t.max}`);
+    if (formulaError) warnings.push(m.engine.invalidFormulaFor(name, t.max));
     resources.push({
       kind,
       id,
@@ -110,19 +111,19 @@ export function deriveCharacter(
   };
   for (const f of c.features) if (f.uses) pushResource('feature', f.id, f.name, f.uses);
   for (const s of c.spellcasting.spells) {
-    if (s.freeUses) pushResource('spell', s.id, spellNames?.get(s.spellId) ?? 'Incantesimo', s.freeUses);
+    if (s.freeUses) pushResource('spell', s.id, spellNames?.get(s.spellId) ?? m.engine.spell, s.freeUses);
   }
 
   const cannotCastSpells = !!eq.armor && !eq.armorTrained;
   if (cannotCastSpells) {
     warnings.push(
-      `${eq.armor!.name}: senza addestramento hai svantaggio ai tiri di FOR e DES e non puoi lanciare incantesimi`,
+      m.engine.armorUntrained(eq.armor!.name),
     );
   }
   if (eq.shield && !eq.shieldTrained) {
-    warnings.push(`${eq.shield.name}: senza addestramento lo scudo non dà bonus alla CA`);
+    warnings.push(m.engine.shieldUntrained(eq.shield.name));
   }
-  if (c.combat.exhaustion >= 6) warnings.push('Indebolimento 6: il personaggio muore');
+  if (c.combat.exhaustion >= 6) warnings.push(m.engine.exhaustionDeath);
 
   const ac = computeArmorClass(c, eq, mods, effects, vars);
 

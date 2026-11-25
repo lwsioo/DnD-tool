@@ -5,13 +5,10 @@ import { toast } from '@/stores/toastStore';
 import { IconButton } from '@/ui/IconButton';
 import { dealDamage, grantTempHp, heal } from './hpActions';
 import { useVitals } from './VitalsContext';
+import { m as msg } from '@/i18n';
 
 type Mode = 'damage' | 'heal' | 'temp';
-const MODE_LABELS: Record<Mode, { button: string; field: string; apply: string }> = {
-  damage: { button: 'Danno', field: 'Danni subiti', apply: 'Infliggi' },
-  heal: { button: 'Cura', field: 'PF recuperati', apply: 'Cura' },
-  temp: { button: 'Temp', field: 'PF temporanei', apply: 'Imposta' },
-};
+const MODE_LABELS: Record<Mode, { button: string; field: string; apply: string }> = msg.vitals.modes;
 
 export function HpWidget() {
   const { character: c, derived, mutate } = useVitals();
@@ -42,22 +39,22 @@ export function HpWidget() {
       if (o.instantDeath)
         toast({
           tone: 'error',
-          message: 'Danno residuo pari o superiore ai PF massimi: morte istantanea.',
+          message: msg.vitals.instantDeath,
           duration: 0,
         });
       else if (o.droppedToZero)
         toast({
           tone: 'error',
-          message: 'A 0 PF: sei Privo di Sensi e inizi i tiri salvezza contro la morte.',
+          message: msg.vitals.droppedToZero,
         });
       else if (o.deathSaveFailuresAdded)
         toast({
           tone: 'error',
-          message: `Danno a 0 PF: ${o.deathSaveFailuresAdded} fallimento/i al TS contro morte.`,
+          message: msg.vitals.failuresAdded(o.deathSaveFailuresAdded),
         });
       if (o.concentrationDC && !o.droppedToZero) {
         toast({
-          message: `Concentrazione: tiro salvezza su Costituzione CD ${o.concentrationDC}.`,
+          message: msg.vitals.concentrationSave(o.concentrationDC),
           duration: 12_000,
         });
       }
@@ -72,18 +69,18 @@ export function HpWidget() {
     mutate((d) => void (d.combat.deathSaves[kind] = n as 0 | 1 | 2 | 3));
 
   return (
-    <section aria-label="Punti ferita" className="rounded-lg border border-line bg-bg/40 p-2.5">
+    <section aria-label={msg.vitals.hp} className="rounded-lg border border-line bg-bg/40 p-2.5">
       <div className="flex items-baseline justify-between">
         <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-muted uppercase">
-          <Heart className="size-3.5 text-hp" aria-hidden /> Punti Ferita
+          <Heart className="size-3.5 text-hp" aria-hidden /> {msg.vitals.hpTitle}
         </span>
         <span
           className="text-sm tabular-nums"
-          aria-label={`${current} su ${max} punti ferita, ${temp} temporanei`}
+          aria-label={msg.vitals.hpAria(current, max, temp)}
         >
           <span className="font-display text-lg">{current}</span>
           <span className="text-muted"> / {max}</span>
-          {temp > 0 && <span className="ml-1 text-xs text-accent">+{temp} temp</span>}
+          {temp > 0 && <span className="ml-1 text-xs text-accent">{msg.vitals.temp(temp)}</span>}
         </span>
       </div>
       <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-panel-2" aria-hidden>
@@ -112,12 +109,12 @@ export function HpWidget() {
             >
               {MODE_LABELS[mode].apply}
             </button>
-            <IconButton icon={X} label="Annulla" onClick={close} className="size-7" />
+            <IconButton icon={X} label={msg.common.cancel} onClick={close} className="size-7" />
           </div>
           {mode === 'damage' && atZero && (
             <label className="flex items-center gap-1.5 text-xs text-muted">
               <input type="checkbox" checked={critical} onChange={(e) => setCritical(e.target.checked)} />{' '}
-              Colpo critico
+              {msg.vitals.critical}
             </label>
           )}
         </form>
@@ -129,7 +126,7 @@ export function HpWidget() {
               type="button"
               onClick={() => setMode(m)}
               disabled={max === 0 && m !== 'temp'}
-              title={max === 0 ? 'Imposta prima i PF massimi nella scheda' : undefined}
+              title={max === 0 ? msg.vitals.setMaxFirst : undefined}
               className="rounded border border-line py-1 text-xs text-muted transition-colors hover:border-accent/50 hover:text-ink disabled:opacity-40"
             >
               {MODE_LABELS[m].button}
@@ -141,18 +138,18 @@ export function HpWidget() {
       {atZero && (
         <div className="mt-2 space-y-1 rounded border border-danger/40 bg-danger/10 p-2 text-xs">
           <p className="flex items-center gap-1 font-semibold text-danger">
-            <Skull className="size-3.5" aria-hidden /> Tiri salvezza contro la morte
+            <Skull className="size-3.5" aria-hidden /> {msg.vitals.deathSaves}
           </p>
           {(['successes', 'failures'] as const).map((kind) => {
             const n = c.combat.deathSaves[kind];
             return (
               <div key={kind} className="flex items-center gap-2">
-                <span className="w-16 text-muted">{kind === 'successes' ? 'Successi' : 'Fallimenti'}</span>
+                <span className="w-16 text-muted">{kind === 'successes' ? msg.vitals.successes : msg.vitals.failures}</span>
                 {[1, 2, 3].map((i) => (
                   <button
                     key={i}
                     type="button"
-                    aria-label={`${kind === 'successes' ? 'Successi' : 'Fallimenti'}: ${i}`}
+                    aria-label={`${kind === 'successes' ? msg.vitals.successes : msg.vitals.failures}: ${i}`}
                     aria-pressed={n >= i}
                     onClick={() => setDeathSaves(kind, n >= i ? i - 1 : i)}
                     className={cn(
@@ -168,8 +165,8 @@ export function HpWidget() {
               </div>
             );
           })}
-          {c.combat.deathSaves.successes >= 3 && <p className="text-ok">Stabile.</p>}
-          {c.combat.deathSaves.failures >= 3 && <p className="font-semibold text-danger">Morto.</p>}
+          {c.combat.deathSaves.successes >= 3 && <p className="text-ok">{msg.vitals.stable}</p>}
+          {c.combat.deathSaves.failures >= 3 && <p className="font-semibold text-danger">{msg.vitals.dead}</p>}
         </div>
       )}
     </section>

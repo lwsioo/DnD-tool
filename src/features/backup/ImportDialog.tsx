@@ -18,6 +18,9 @@ import { toast } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore';
 import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
+import { m } from '@/i18n';
+
+const B = m.misc.backup;
 
 type State =
   | { step: 'pick'; error?: string }
@@ -56,7 +59,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
       const parsed = parseImportText(await readFileText(file));
       setState({ step: 'preview', plan: await planImport(parsed), fileName: file.name });
     } catch (e) {
-      const message = e instanceof ImportError ? e.message : 'Impossibile leggere il file.';
+      const message = e instanceof ImportError ? e.message : B.unreadable;
       setState({ step: 'pick', error: message });
     }
   };
@@ -71,7 +74,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
         setActiveCharacter(characterId);
         toast({
           tone: 'success',
-          message: `Personaggio importato: ${plan.file.data.character.identity.name}`,
+          message: B.characterImported(plan.file.data.character.identity.name),
         });
         close();
         navigate(`/pg/${characterId}/scheda`);
@@ -79,23 +82,20 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
         const res = await applyLibraryPack(plan.file.data);
         toast({
           tone: 'success',
-          message: `Contenuti importati: ${res.spells} incantesimi, ${res.items} voci di libreria.`,
+          message: B.contentImported(res.spells, res.items),
         });
         close();
       } else {
         await applyFullBackup(plan.file.data, backupMode);
         toast({
           tone: 'success',
-          message:
-            backupMode === 'replace'
-              ? 'Archivio sostituito. Puoi tornare indietro dalle Impostazioni.'
-              : 'Backup unito all’archivio.',
+          message: backupMode === 'replace' ? B.replaced : B.merged,
         });
         close();
         navigate('/');
       }
     } catch (e) {
-      setState({ step: 'pick', error: `Import non riuscito: ${e instanceof Error ? e.message : String(e)}` });
+      setState({ step: 'pick', error: m.common.importFailed(e instanceof Error ? e.message : String(e)) });
     }
   };
 
@@ -105,16 +105,16 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
     <Dialog
       open={open}
       onClose={busy ? () => {} : close}
-      title="Importa da file JSON"
+      title={B.title}
       size="md"
       footer={
         state.step === 'preview' || state.step === 'importing' ? (
           <>
             <Button variant="ghost" onClick={() => setState({ step: 'pick' })} disabled={busy}>
-              Scegli un altro file
+              {B.otherFile}
             </Button>
             <Button variant="primary" onClick={() => void confirm()} disabled={busy} data-autofocus>
-              {state.step === 'importing' ? 'Importazione…' : 'Importa'}
+              {state.step === 'importing' ? B.importing : B.import}
             </Button>
           </>
         ) : undefined
@@ -123,14 +123,15 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
       {state.step === 'pick' && <FilePicker error={state.error} onFile={(f) => void readFile(f)} />}
       {state.step === 'reading' && (
         <p className="flex items-center gap-2 text-muted">
-          <LoaderCircle className="size-4 animate-spin" aria-hidden /> Lettura del file…
+          <LoaderCircle className="size-4 animate-spin" aria-hidden /> {B.reading}
         </p>
       )}
       {(state.step === 'preview' || state.step === 'importing') && (
         <div className="space-y-4">
           <p className="text-xs text-muted">
-            File: <span className="text-ink">{state.fileName}</span> · creato con Codex{' '}
-            {state.plan.file.appVersion}
+            {B.fileInfo}
+            <span className="text-ink">{state.fileName}</span>
+            {B.createdWith(state.plan.file.appVersion)}
           </p>
           {state.plan.kind === 'character' ? (
             <CharacterPreview plan={state.plan} mode={characterMode} onMode={setCharacterMode} />
@@ -172,16 +173,14 @@ function FilePicker({ error, onFile }: { error?: string; onFile: (f: File) => vo
         )}
       >
         <FileUp className="size-8 text-accent" aria-hidden />
-        <span className="font-medium">Trascina qui un file .json oppure clicca per sceglierlo</span>
-        <span className="text-xs text-muted">
-          Personaggio, backup completo o pacchetto contenuti di Codex
-        </span>
+        <span className="font-medium">{B.drop}</span>
+        <span className="text-xs text-muted">{B.dropHint}</span>
       </label>
       <input
         id={inputId}
         type="file"
         accept="application/json,.json"
-        aria-label="File da importare"
+        aria-label={B.fileLabel}
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0];
@@ -241,33 +240,33 @@ function CharacterPreview({
   return (
     <div className="space-y-3">
       <div className="rounded-lg border border-line bg-bg/40 p-3">
-        <p className="font-display text-lg">{c.identity.name || 'Senza nome'}</p>
+        <p className="font-display text-lg">{c.identity.name || m.common.unnamed}</p>
         <p className="text-muted">{[c.identity.species, classSummary(c)].filter(Boolean).join(' · ')}</p>
         <p className="mt-2 text-xs text-muted">
           {plan.spells.total === 0
-            ? 'Nessun incantesimo.'
-            : `${plan.spells.total} incantesimi: ${plan.spells.toAdd} nuovi, ${plan.spells.alreadyPresent} già nella libreria.`}
+            ? B.noSpells
+            : B.spells(plan.spells.total, plan.spells.toAdd, plan.spells.alreadyPresent)}
         </p>
         {plan.campaignMissing && (
           <p className="mt-1 text-xs text-muted">
-            La sua campagna non è in questo archivio: verrà importato senza campagna.
+            {B.campaignMissing}
           </p>
         )}
       </div>
       {plan.existingName && (
         <fieldset className="space-y-2">
           <legend className="mb-1 text-xs font-semibold text-muted">
-            Questo personaggio esiste già ({plan.existingName}).
+            {B.exists(plan.existingName)}
           </legend>
-          <Option checked={mode === 'copy'} onChange={() => onMode('copy')} title="Importa come copia">
-            Il personaggio esistente resta com’è.
+          <Option checked={mode === 'copy'} onChange={() => onMode('copy')} title={B.asCopy}>
+            {B.asCopyHint}
           </Option>
           <Option
             checked={mode === 'replace'}
             onChange={() => onMode('replace')}
-            title="Sostituisci quello esistente"
+            title={B.replace}
           >
-            Prima viene salvato uno snapshot della versione attuale.
+            {B.replaceHint}
           </Option>
         </fieldset>
       )}
@@ -276,11 +275,11 @@ function CharacterPreview({
 }
 
 const COUNT_LABELS: Array<[keyof ArchiveCounts, string]> = [
-  ['characters', 'Personaggi'],
-  ['campaigns', 'Campagne'],
-  ['wikiEntries', 'Voci wiki'],
-  ['spells', 'Incantesimi'],
-  ['libraryItems', 'Modelli in libreria'],
+  ['characters', B.counts.characters],
+  ['campaigns', B.counts.campaigns],
+  ['wikiEntries', B.counts.wikiEntries],
+  ['spells', B.counts.spells],
+  ['libraryItems', B.counts.libraryItems],
 ];
 
 function BackupPreview({
@@ -297,9 +296,9 @@ function BackupPreview({
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs text-muted">
-            <th className="py-1 font-medium">Backup completo</th>
-            <th className="py-1 text-right font-medium">Nel file</th>
-            <th className="py-1 text-right font-medium">Ora nell’app</th>
+            <th className="py-1 font-medium">{B.fullBackup}</th>
+            <th className="py-1 text-right font-medium">{B.inFile}</th>
+            <th className="py-1 text-right font-medium">{B.inApp}</th>
           </tr>
         </thead>
         <tbody>
@@ -313,24 +312,25 @@ function BackupPreview({
         </tbody>
       </table>
       <fieldset className="space-y-2">
-        <Option checked={mode === 'merge'} onChange={() => onMode('merge')} title="Unisci">
-          Aggiunge ciò che manca; per gli stessi elementi tiene la versione più recente.
+        <Option checked={mode === 'merge'} onChange={() => onMode('merge')} title={B.merge}>
+          {B.mergeHint}
         </Option>
-        <Option checked={mode === 'replace'} onChange={() => onMode('replace')} title="Sostituisci tutto">
-          L’archivio attuale viene salvato prima e potrai ripristinarlo dalle Impostazioni.
+        <Option checked={mode === 'replace'} onChange={() => onMode('replace')} title={B.replaceAll}>
+          {B.replaceAllHint}
         </Option>
       </fieldset>
     </div>
   );
 }
 
+const LK = m.misc.library.kinds;
 const LIBRARY_LABELS: Array<[LibraryCountKey, string]> = [
-  ['spells', 'Incantesimi'],
-  ['species', 'Specie'],
-  ['background', 'Background'],
-  ['feat', 'Talenti'],
-  ['item', 'Oggetti'],
-  ['feature', 'Privilegi'],
+  ['spells', LK.spells],
+  ['species', LK.species],
+  ['background', LK.background],
+  ['feat', LK.feat],
+  ['item', LK.item],
+  ['feature', LK.feature],
 ];
 
 function LibraryPreview({ plan }: { plan: Extract<ImportPlan, { kind: 'library' }> }) {
@@ -340,9 +340,9 @@ function LibraryPreview({ plan }: { plan: Extract<ImportPlan, { kind: 'library' 
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs text-muted">
-            <th className="py-1 font-medium">Pacchetto contenuti</th>
-            <th className="py-1 text-right font-medium">Nel file</th>
-            <th className="py-1 text-right font-medium">Nuovi</th>
+            <th className="py-1 font-medium">{B.pack}</th>
+            <th className="py-1 text-right font-medium">{B.inFile}</th>
+            <th className="py-1 text-right font-medium">{B.newOnes}</th>
           </tr>
         </thead>
         <tbody>
@@ -355,9 +355,9 @@ function LibraryPreview({ plan }: { plan: Extract<ImportPlan, { kind: 'library' 
           ))}
         </tbody>
       </table>
-      {rows.length === 0 && <p className="text-muted">Il pacchetto è vuoto.</p>}
+      {rows.length === 0 && <p className="text-muted">{B.emptyPack}</p>}
       <p className="text-xs text-muted">
-        Gli elementi già presenti vengono saltati: personaggi e campagne non vengono toccati.
+        {B.packNote}
       </p>
     </div>
   );

@@ -23,8 +23,10 @@ import { FieldLabel, inputClass, NumberField, Select, TextField } from '@/ui/fie
 import { IconButton } from '@/ui/IconButton';
 import { addClass, removeClass } from './classActions';
 import { useSheet } from './SheetContext';
+import { m } from '@/i18n';
+import { LANG_TAG } from '@/i18n/locale';
 
-const nf = new Intl.NumberFormat('it-IT');
+const nf = new Intl.NumberFormat(LANG_TAG);
 
 export function IdentityHeader() {
   const { character: c, derived, edit, mutate, mutateLater } = useSheet();
@@ -35,30 +37,30 @@ export function IdentityHeader() {
     .join(' · ');
 
   return (
-    <section aria-label="Identità" className="space-y-4 rounded-xl border border-line bg-panel p-4">
+    <section aria-label={m.sheet.identity} className="space-y-4 rounded-xl border border-line bg-panel p-4">
       <div className="flex flex-wrap items-start gap-4">
         <div className="min-w-60 flex-1 space-y-1">
           {edit ? (
             <TextField
-              label="Nome del personaggio"
+              label={m.sheet.characterName}
               value={c.identity.name}
-              placeholder="Nome del personaggio"
+              placeholder={m.sheet.characterName}
               onValue={(v) => mutateLater('identity.name', (d) => void (d.identity.name = v))}
               className="font-display text-xl tracking-wide"
             />
           ) : (
-            <h2 className="font-display text-2xl tracking-wide">{c.identity.name || 'Senza nome'}</h2>
+            <h2 className="font-display text-2xl tracking-wide">{c.identity.name || m.common.unnamed}</h2>
           )}
           {!edit && (
             <p className="text-sm text-muted">
               {[classSummary(c), subtitle].filter(Boolean).join(' — ')}
-              {c.identity.deity && <> · devoto di {c.identity.deity}</>}
+              {c.identity.deity && m.sheet.devotedTo(c.identity.deity)}
             </p>
           )}
           {!edit && (
             <p className="text-xs text-muted">
-              Livello {derived.level || '—'} · {nf.format(c.identity.xp)} PE
-              {next !== null && derived.level > 0 && <> · prossimo livello a {nf.format(next)}</>}
+              {m.sheet.xpLine(String(derived.level || '—'), nf.format(c.identity.xp))}
+              {next !== null && derived.level > 0 && m.sheet.nextLevelAt(nf.format(next))}
             </p>
           )}
         </div>
@@ -73,7 +75,7 @@ export function IdentityHeader() {
           )}
         >
           <Star className={cn('size-4', inspired && 'fill-current')} aria-hidden />
-          Ispirazione Eroica
+          {m.sheet.heroicInspiration}
         </button>
         <CharacterActions />
       </div>
@@ -103,14 +105,14 @@ function IdentityEditor() {
     <FieldLabel label={label}>
       <button
         type="button"
-        aria-label={`${label}: ${value || 'non impostata'} — cambia`}
+        aria-label={m.sheet.changeOrigin(label, value)}
         onClick={() => setDialog(kind)}
         className={cn(inputClass, 'flex items-center gap-2 text-left hover:border-accent/60')}
       >
         <span className="min-w-0 flex-1 truncate">
-          {value || <span className="text-muted">Scegli…</span>}
+          {value || <span className="text-muted">{m.sheet.choose}</span>}
         </span>
-        {linked && <Sparkles className="size-3.5 shrink-0 text-accent" aria-label="automatico" />}
+        {linked && <Sparkles className="size-3.5 shrink-0 text-accent" aria-label={m.sheet.automatic} />}
       </button>
     </FieldLabel>
   );
@@ -118,34 +120,34 @@ function IdentityEditor() {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {originButton(
         'species',
-        'Specie',
+        m.sheet.species,
         [c.identity.species, option?.name].filter(Boolean).join(' · '),
         Boolean(c.origin?.speciesId),
       )}
-      <FieldLabel label="Taglia">
+      <FieldLabel label={m.sheet.size}>
         <Select
-          label="Taglia"
+          label={m.sheet.size}
           value={c.identity.size}
           onValue={(v) => mutate((d) => void (d.identity.size = v))}
           options={[
-            { value: 'S', label: 'Piccola' },
-            { value: 'M', label: 'Media' },
-            { value: 'L', label: 'Grande' },
+            { value: 'S', label: m.terms.sizes.S },
+            { value: 'M', label: m.terms.sizes.M },
+            { value: 'L', label: m.terms.sizes.L },
           ]}
         />
       </FieldLabel>
-      {originButton('background', 'Background', c.identity.background, Boolean(c.origin?.backgroundId))}
-      <FieldLabel label="Allineamento">
+      {originButton('background', m.sheet.background, c.identity.background, Boolean(c.origin?.backgroundId))}
+      <FieldLabel label={m.sheet.alignment}>
         <AlignmentSelect
           value={c.identity.alignment ?? ''}
           onValue={(v) => mutate((d) => void (d.identity.alignment = v || undefined))}
         />
       </FieldLabel>
-      {text('deity', 'Divinità')}
-      {text('playerName', 'Giocatore')}
-      <FieldLabel label="Punti esperienza">
+      {text('deity', m.sheet.deity)}
+      {text('playerName', m.sheet.player)}
+      <FieldLabel label={m.sheet.xp}>
         <NumberField
-          label="Punti esperienza"
+          label={m.sheet.xp}
           value={c.identity.xp}
           min={0}
           max={1_000_000}
@@ -163,11 +165,11 @@ function IdentityEditor() {
 }
 
 const CASTER_OPTIONS: Array<{ value: CasterProgression; label: string }> = [
-  { value: 'none', label: 'Non incantatore' },
-  { value: 'full', label: 'Incantatore completo' },
-  { value: 'half', label: 'Semi-incantatore' },
-  { value: 'third', label: 'Un terzo (sottoclasse)' },
-  { value: 'pact', label: 'Magia del Patto' },
+  { value: 'none', label: m.sheet.casterOptions.none },
+  { value: 'full', label: m.sheet.casterOptions.full },
+  { value: 'half', label: m.sheet.casterOptions.half },
+  { value: 'third', label: m.sheet.casterOptions.third },
+  { value: 'pact', label: m.sheet.casterOptions.pact },
 ];
 const DICE: Die[] = [6, 8, 10, 12];
 
@@ -175,11 +177,10 @@ function ClassesEditor() {
   const { character: c, mutate, mutateLater } = useSheet();
   return (
     <div className="space-y-2">
-      <h3 className="text-[11px] font-semibold tracking-wider text-muted uppercase">Classi</h3>
+      <h3 className="text-[11px] font-semibold tracking-wider text-muted uppercase">{m.sheet.classes}</h3>
       {c.classes.length === 0 && (
         <p className="text-sm text-muted">
-          Nessuna classe. Aggiungendo la prima classe SRD vengono impostati tiri salvezza, addestramenti e
-          fonte da incantatore.
+          {m.sheet.noClasses}
         </p>
       )}
       {c.classes.map((cl, index) => {
@@ -189,13 +190,13 @@ function ClassesEditor() {
             key={cl.id}
             className="grid items-end gap-2 rounded-lg border border-line p-2 sm:grid-cols-[1.2fr_1.2fr_5rem_5.5rem_1.4fr_auto]"
           >
-            <FieldLabel label={index === 0 ? 'Classe (iniziale)' : 'Classe'}>
+            <FieldLabel label={index === 0 ? m.sheet.classInitial : m.sheet.class}>
               {srd ? (
                 <span className="block py-1.5 text-sm font-medium">{cl.name}</span>
               ) : (
                 <TextField
                   value={cl.name}
-                  label="Nome della classe"
+                  label={m.sheet.className}
                   onValue={(v) =>
                     mutateLater(
                       `class.${cl.id}.name`,
@@ -205,10 +206,10 @@ function ClassesEditor() {
                 />
               )}
             </FieldLabel>
-            <FieldLabel label="Sottoclasse">
+            <FieldLabel label={m.sheet.subclass}>
               <TextField
                 value={cl.subclass ?? ''}
-                label="Sottoclasse"
+                label={m.sheet.subclass}
                 onValue={(v) =>
                   mutateLater(
                     `class.${cl.id}.subclass`,
@@ -217,9 +218,9 @@ function ClassesEditor() {
                 }
               />
             </FieldLabel>
-            <FieldLabel label="Livello">
+            <FieldLabel label={m.sheet.level}>
               <NumberField
-                label={`Livello ${cl.name}`}
+                label={m.sheet.levelOf(cl.name)}
                 value={cl.level}
                 min={1}
                 max={20}
@@ -231,9 +232,9 @@ function ClassesEditor() {
                 }
               />
             </FieldLabel>
-            <FieldLabel label="Dado vita">
+            <FieldLabel label={m.sheet.hitDie}>
               <Select
-                label={`Dado vita ${cl.name}`}
+                label={m.sheet.hitDieOf(cl.name)}
                 value={String(cl.hitDie)}
                 onValue={(v) =>
                   mutate((d) => void (d.classes.find((x) => x.id === cl.id)!.hitDie = Number(v) as Die))
@@ -241,9 +242,9 @@ function ClassesEditor() {
                 options={DICE.map((x) => ({ value: String(x), label: `d${x}` }))}
               />
             </FieldLabel>
-            <FieldLabel label="Magia">
+            <FieldLabel label={m.sheet.magic}>
               <Select
-                label={`Progressione magica ${cl.name}`}
+                label={m.sheet.progressionOf(cl.name)}
                 value={cl.caster}
                 onValue={(v) => mutate((d) => void (d.classes.find((x) => x.id === cl.id)!.caster = v))}
                 options={CASTER_OPTIONS}
@@ -251,14 +252,14 @@ function ClassesEditor() {
             </FieldLabel>
             <IconButton
               icon={X}
-              label={`Rimuovi ${cl.name}`}
+              label={m.common.remove(cl.name)}
               onClick={() => mutate((d) => removeClass(d, cl.id))}
             />
           </div>
         );
       })}
       <select
-        aria-label="Aggiungi classe"
+        aria-label={m.sheet.addClass}
         value=""
         onChange={(e) => {
           const key = e.target.value;
@@ -267,13 +268,13 @@ function ClassesEditor() {
         }}
         className="rounded-md border border-dashed border-line bg-bg px-2.5 py-1.5 text-sm text-muted"
       >
-        <option value="">+ Aggiungi classe…</option>
+        <option value="">{m.sheet.addClassOption}</option>
         {CLASSES.map((cl) => (
           <option key={cl.key} value={cl.key}>
             {cl.name}
           </option>
         ))}
-        <option value="custom">Personalizzata…</option>
+        <option value="custom">{m.sheet.customClass}</option>
       </select>
     </div>
   );
@@ -284,7 +285,7 @@ function CharacterActions() {
   const navigate = useNavigate();
   const setActiveCharacter = useUiStore((s) => s.setActiveCharacter);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const label = character.identity.name || 'Senza nome';
+  const label = character.identity.name || m.common.unnamed;
 
   const remove = async () => {
     setConfirmDelete(false);
@@ -293,10 +294,10 @@ function CharacterActions() {
     setActiveCharacter(null);
     navigate('/benvenuto');
     toast({
-      message: `${label} eliminato.`,
+      message: m.sheet.deleted(label),
       duration: 10_000,
       action: {
-        label: 'Annulla',
+        label: m.common.undo,
         onClick: async () => {
           await restoreDeletedCharacter(deleted);
           setActiveCharacter(deleted.character.id);
@@ -309,30 +310,29 @@ function CharacterActions() {
   const exportJson = async () => {
     try {
       const name = await exportCharacterToFile(character.id);
-      toast({ tone: 'success', message: `Scaricato ${name}` });
+      toast({ tone: 'success', message: m.sheet.downloaded(name) });
     } catch (e) {
-      toast({ tone: 'error', message: `Export non riuscito: ${e instanceof Error ? e.message : e}` });
+      toast({ tone: 'error', message: m.common.exportFailed(e instanceof Error ? e.message : String(e)) });
     }
   };
 
   return (
     <div className="flex gap-1">
       <Button variant="ghost" icon={Download} onClick={() => void exportJson()}>
-        Esporta JSON
+        {m.sheet.exportJson}
       </Button>
       <Button variant="ghost" icon={Trash2} onClick={() => setConfirmDelete(true)}>
-        Elimina
+        {m.sheet.delete}
       </Button>
       <ConfirmDialog
         open={confirmDelete}
-        title={`Eliminare ${label}?`}
-        confirmLabel="Elimina"
+        title={m.sheet.confirmDelete(label)}
+        confirmLabel={m.sheet.delete}
         danger
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => void remove()}
       >
-        Il personaggio viene rimosso dall’archivio. Potrai annullare dalla notifica per qualche secondo; per
-        sicurezza puoi prima esportarlo in JSON.
+        {m.sheet.deleteBody}
       </ConfirmDialog>
     </div>
   );

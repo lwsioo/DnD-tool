@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { db } from '@/db/db';
+import { cn } from '@/lib/cn';
 import type { Spell } from '@/domain/spells';
 import { normalizeKey } from '@/lib/normalizeKey';
 import { useUiStore } from '@/stores/uiStore';
@@ -10,6 +11,8 @@ import { Dialog } from '@/ui/Dialog';
 import { IconButton } from '@/ui/IconButton';
 import { inputClass, Select } from '@/ui/fields';
 import { spellLevelLine } from './spellText';
+import { LANG_TAG, m } from '@/i18n';
+import { canonicalClass } from '@/data/srd/classes';
 
 interface LibraryDialogProps {
   /** Id degli incantesimi già nel personaggio. */
@@ -44,10 +47,10 @@ export function LibraryDialog({
   const [text, setText] = useState('');
   const [level, setLevel] = useState('all');
   const classOptions = useMemo(
-    () => [...new Set(spells.flatMap((s) => s.classes))].sort((a, b) => a.localeCompare(b, 'it')),
+    () => [...new Set(spells.flatMap((s) => s.classes.map(canonicalClass)))].sort((a, b) => a.localeCompare(b, LANG_TAG)),
     [spells],
   );
-  const preferred = characterClasses.find((c) => classOptions.includes(c));
+  const preferred = characterClasses.map(canonicalClass).find((c) => classOptions.includes(c));
   const [klass, setKlass] = useState<string | null>(null);
   const activeClass = klass ?? preferred ?? 'all';
   const missingClasses = spells.length > 0 && classOptions.length === 0;
@@ -57,7 +60,7 @@ export function LibraryDialog({
     return spells.filter(
       (s) =>
         (level === 'all' || String(s.level) === level) &&
-        (activeClass === 'all' || s.classes.includes(activeClass)) &&
+        (activeClass === 'all' || s.classes.some((c) => canonicalClass(c) === activeClass)) &&
         (!q || s.nameKey.includes(q) || normalizeKey(s.nameEn ?? '').includes(q)),
     );
   }, [spells, text, level, activeClass]);
@@ -66,15 +69,15 @@ export function LibraryDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Libreria incantesimi"
+      title={m.grimoire.libraryTitle}
       size="lg"
       footer={
         <>
           <Button icon={Plus} onClick={onNew}>
-            Nuovo incantesimo
+            {m.grimoire.newSpell}
           </Button>
           <Button variant="primary" onClick={onClose}>
-            Fatto
+            {m.common.done}
           </Button>
         </>
       }
@@ -82,49 +85,56 @@ export function LibraryDialog({
       <div className="space-y-3">
         <div className="flex gap-2">
           <input
-            aria-label="Cerca nella libreria"
-            placeholder="Cerca per nome (anche inglese)…"
+            aria-label={m.grimoire.searchLibrary}
+            placeholder={m.grimoire.searchLibraryPlaceholder}
             className={inputClass}
             value={text}
             data-autofocus
             onChange={(e) => setText(e.target.value)}
           />
           <Select
-            label="Livello"
+            label={m.grimoire.level}
             value={level}
             onValue={setLevel}
             className="w-40"
             options={[
-              { value: 'all', label: 'Tutti i livelli' },
+              { value: 'all', label: m.grimoire.allLevels },
               ...Array.from({ length: 10 }, (_, i) => ({
                 value: String(i),
-                label: i === 0 ? 'Trucchetti' : `${i}° livello`,
+                label: m.grimoire.levelTitle(i),
               })),
             ]}
           />
-          {classOptions.length > 0 && (
+          {classOptions.length > 0 ? (
             <Select
-              label="Classe"
+              label={m.grimoire.class}
               value={activeClass}
               onValue={setKlass}
               className="w-40"
               options={[
-                { value: 'all', label: 'Tutte le classi' },
+                { value: 'all', label: m.grimoire.allClasses },
                 ...classOptions.map((c) => ({ value: c, label: c })),
               ]}
             />
+          ) : (
+            <select
+              aria-label={m.grimoire.class}
+              disabled
+              title={m.grimoire.missingClassesTitle}
+              className={cn(inputClass, 'w-40 opacity-60')}
+            >
+              <option>{m.grimoire.noClassData}</option>
+            </select>
           )}
         </div>
         {missingClasses && (
-          <p className="text-xs text-muted">
-            Questi incantesimi non hanno l’elenco delle classi: per filtrarli per classe importa anche il file
-            delle classi di 5etools (Impostazioni → Contenuti).
+          <p className="rounded-md border border-line bg-bg/40 p-2 text-xs text-muted">
+            {m.grimoire.missingClassesHint}
           </p>
         )}
         {spells.length === 0 ? (
           <p className="text-muted">
-            La libreria è vuota. Importa gli incantesimi da Impostazioni → Contenuti (file di 5etools o
-            pacchetto di Codex), oppure creane uno.
+            {m.grimoire.emptyLibrary}
           </p>
         ) : (
           <ul className="divide-y divide-line">
@@ -143,25 +153,25 @@ export function LibraryDialog({
                 </button>
                 {owned.has(s.id) ? (
                   <span className="flex items-center gap-1 text-xs text-ok">
-                    <Check className="size-3.5" aria-hidden /> nel grimorio
+                    <Check className="size-3.5" aria-hidden /> {m.grimoire.inGrimoire}
                   </span>
                 ) : (
                   <Button
                     size="sm"
                     disabled={!canAdd}
                     onClick={() => onAdd(s)}
-                    aria-label={`Aggiungi ${s.name}`}
+                    aria-label={m.grimoire.addX(s.name)}
                   >
-                    Aggiungi
+                    {m.common.add}
                   </Button>
                 )}
-                <IconButton icon={Pencil} label={`Modifica ${s.name}`} onClick={() => onEdit(s)} />
+                <IconButton icon={Pencil} label={m.grimoire.editX(s.name)} onClick={() => onEdit(s)} />
                 <IconButton
                   icon={Trash2}
-                  label={`Elimina ${s.name} dalla libreria`}
+                  label={m.grimoire.deleteFromLibrary(s.name)}
                   disabled={usedIds.has(s.id)}
                   title={
-                    usedIds.has(s.id) ? 'Usato da almeno un personaggio' : `Elimina ${s.name} dalla libreria`
+                    usedIds.has(s.id) ? m.grimoire.usedByCharacter : m.grimoire.deleteFromLibrary(s.name)
                   }
                   onClick={() => void db.spells.delete(s.id)}
                 />

@@ -1,5 +1,7 @@
 import { useOutletContext } from 'react-router';
+import { canonicalClass } from '@/data/srd/classes';
 import type { Character } from '@/domain/character';
+import { m } from '@/i18n';
 
 export interface CharacterOutletContext {
   character: Character;
@@ -12,6 +14,6 @@ export function useCurrentCharacter(): Character {
 
 /** "Guerriero 3 / Mago 2", oppure "Senza classe". */
 export function classSummary(c: Character): string {
-  if (c.classes.length === 0) return 'Senza classe';
-  return c.classes.map((cl) => `${cl.name} ${cl.level}`).join(' / ');
+  if (c.classes.length === 0) return m.app.switcher.noClass;
+  return c.classes.map((cl) => `${canonicalClass(cl.name)} ${cl.level}`).join(' / ');
 }

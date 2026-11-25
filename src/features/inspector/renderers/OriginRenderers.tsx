@@ -7,15 +7,12 @@ import { InspectorChip } from '@/ui/InspectorChip';
 import { MarkdownView } from '@/ui/MarkdownView';
 import { describeEffect } from '../describeEffect';
 import { Article, NotFound, Section, StatList } from './Article';
+import { m } from '@/i18n';
 
-const SIZE = { S: 'Piccola', M: 'Media', L: 'Grande' } as const;
+const SIZE = m.terms.sizes;
 const FEAT_CATEGORY = {
-  origin: 'Talento d’origine',
-  general: 'Talento generale',
-  fightingStyle: 'Stile di combattimento',
-  epic: 'Dono epico',
-  other: 'Talento',
-} as const;
+  ...m.inspector.featCategory,
+};
 
 const sourceLine = (kind: string, d: { nameEn?: string; name: string; sourceBook?: string }) =>
   [kind, d.nameEn && d.nameEn !== d.name ? d.nameEn : null, d.sourceBook].filter(Boolean).join(' · ');
@@ -46,24 +43,24 @@ function Traits({ traits }: { traits: OriginTrait[] }) {
 export function SpeciesRenderer({ id }: { id: string }) {
   const { units } = useAppSettings();
   const def = useOriginLibrary().species.find((s) => s.id === id);
-  if (!def) return <NotFound what="Specie" />;
+  if (!def) return <NotFound what={m.inspector.species} />;
   return (
-    <Article title={def.name} subtitle={sourceLine('Specie', def)}>
+    <Article title={def.name} subtitle={sourceLine(m.inspector.species, def)}>
       <StatList
         rows={[
-          ['Taglia', def.sizes.map((s) => SIZE[s]).join(' o ')],
-          ['Velocità', formatDistance(def.speed, units)],
-          !!def.darkvision && ['Scurovisione', formatDistance(def.darkvision, units)],
-          !!def.skills?.length && ['Abilità', def.skills.map((s) => SKILL_LABELS[s]).join(', ')],
+          [m.inspector.size, def.sizes.map((s) => SIZE[s]).join(m.inspector.sizeOr)],
+          [m.inspector.speed, formatDistance(def.speed, units)],
+          !!def.darkvision && [m.inspector.darkvision, formatDistance(def.darkvision, units)],
+          !!def.skills?.length && [m.inspector.skills, def.skills.map((s) => SKILL_LABELS[s]).join(', ')],
           !!def.skillChoice && [
-            'Abilità a scelta',
-            `${def.skillChoice.count}${def.skillChoice.from ? ` tra ${def.skillChoice.from.map((s) => SKILL_LABELS[s]).join(', ')}` : ''}`,
+            m.inspector.skillChoice,
+            `${def.skillChoice.count}${def.skillChoice.from ? m.inspector.among(def.skillChoice.from.map((s) => SKILL_LABELS[s]).join(', ')) : ''}`,
           ],
-          !!def.originFeat && ['Talento', 'Un talento d’origine a scelta'],
+          !!def.originFeat && [m.inspector.feat, m.inspector.originFeatChoice],
         ]}
       />
       {def.description && <MarkdownView compact>{def.description}</MarkdownView>}
-      <Section title="Tratti">
+      <Section title={m.inspector.traits}>
         <Traits traits={def.traits} />
       </Section>
       {def.choice && (
@@ -82,28 +79,28 @@ export function SpeciesRenderer({ id }: { id: string }) {
 
 export function BackgroundRenderer({ id }: { id: string }) {
   const def = useOriginLibrary().backgrounds.find((b) => b.id === id);
-  if (!def) return <NotFound what="Background" />;
+  if (!def) return <NotFound what={m.inspector.background} />;
   const equipment = def.equipment
     .map((e) => (e.quantity > 1 ? `${e.name} ×${e.quantity}` : e.name))
     .join(', ');
   return (
-    <Article title={def.name} subtitle={sourceLine('Background', def)}>
+    <Article title={def.name} subtitle={sourceLine(m.inspector.background, def)}>
       <StatList
         rows={[
-          ['Caratteristiche', def.abilities.map((a) => ABILITY_LABELS[a].long).join(', ')],
+          [m.inspector.abilities, def.abilities.map((a) => ABILITY_LABELS[a].long).join(', ')],
           [
-            'Talento',
+            m.inspector.feat,
             def.featId ? (
-              <InspectorChip to={{ kind: 'feat', id: def.featId }}>{def.featName ?? 'Talento'}</InspectorChip>
+              <InspectorChip to={{ kind: 'feat', id: def.featId }}>{def.featName ?? m.inspector.feat}</InspectorChip>
             ) : (
               (def.featName ?? '—')
             ),
           ],
-          ['Abilità', def.skills.map((s) => SKILL_LABELS[s]).join(', ') || '—'],
-          ['Strumenti', def.tools.join(', ') || '—'],
+          [m.inspector.skills, def.skills.map((s) => SKILL_LABELS[s]).join(', ') || '—'],
+          [m.inspector.tools, def.tools.join(', ') || '—'],
           [
-            'Equipaggiamento',
-            `A: ${equipment}${def.equipmentGoldInA ? `, ${def.equipmentGoldInA} mo` : ''} · B: ${def.equipmentGold} mo`,
+            m.inspector.equipment,
+            `A: ${equipment}${def.equipmentGoldInA ? `, ${def.equipmentGoldInA} ${m.inspector.gp}` : ''} · B: ${def.equipmentGold} ${m.inspector.gp}`,
           ],
         ]}
       />
@@ -114,14 +111,14 @@ export function BackgroundRenderer({ id }: { id: string }) {
 
 export function FeatRenderer({ id }: { id: string }) {
   const def = useOriginLibrary().feats.find((f) => f.id === id);
-  if (!def) return <NotFound what="Talento" />;
+  if (!def) return <NotFound what={m.inspector.feat} />;
   return (
     <Article title={def.name} subtitle={sourceLine(FEAT_CATEGORY[def.category], def)}>
       <StatList
         rows={[
-          !!def.prerequisite && ['Prerequisito', def.prerequisite],
-          !!def.repeatable && ['Ripetibile', 'Sì'],
-          !!def.spellLists?.length && ['Liste', def.spellLists.join(', ')],
+          !!def.prerequisite && [m.inspector.prerequisite, def.prerequisite],
+          !!def.repeatable && [m.inspector.repeatable, m.inspector.yes],
+          !!def.spellLists?.length && [m.inspector.lists, def.spellLists.join(', ')],
         ]}
       />
       <MarkdownView compact>{def.description}</MarkdownView>

@@ -1,5 +1,6 @@
 import { AlertTriangle, Check, LoaderCircle } from 'lucide-react';
 import { useSaveStatus } from '@/stores/saveStatus';
+import { m } from '@/i18n';
 
 /** Stato del salvataggio automatico su IndexedDB. */
 export function SaveIndicator() {
@@ -10,7 +11,7 @@ export function SaveIndicator() {
     return (
       <span role="status" className="flex items-center gap-1 text-xs text-danger" title={error}>
         <AlertTriangle className="size-3.5" aria-hidden />
-        Errore di salvataggio
+        {m.app.save.error}
       </span>
     );
   }
@@ -18,7 +19,7 @@ export function SaveIndicator() {
     return (
       <span role="status" className="flex items-center gap-1 text-xs text-muted">
         <LoaderCircle className="size-3.5 animate-spin" aria-hidden />
-        Salvataggio…
+        {m.app.save.saving}
       </span>
     );
   }
@@ -26,10 +27,10 @@ export function SaveIndicator() {
     <span
       role="status"
       className="hidden items-center gap-1 text-xs text-muted sm:flex"
-      title="Salvataggio automatico"
+      title={m.app.save.auto}
     >
       <Check className="size-3.5 text-ok" aria-hidden />
-      Salvato
+      {m.app.save.saved}
     </span>
   );
 }

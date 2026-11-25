@@ -3,6 +3,7 @@ import type { EditorView } from '@codemirror/view';
 import { CONDITION_KEYS, CONDITIONS } from '@/data/srd/conditions';
 import { CATEGORY_INFO } from '../categories';
 import type { LinkIndex } from './resolve';
+import { m } from '@/i18n';
 
 export interface LinkOption {
   label: string;
@@ -18,11 +19,11 @@ export function linkOptions(index: LinkIndex): LinkOption[] {
     out.set(e.title, { label: e.title, detail: CATEGORY_INFO[e.category].singular, boost: 2 });
   }
   for (const s of index.spells.values()) {
-    if (!out.has(s.name)) out.set(s.name, { label: s.name, detail: 'Incantesimo', boost: 1 });
+    if (!out.has(s.name)) out.set(s.name, { label: s.name, detail: m.wiki.spell, boost: 1 });
   }
   for (const k of CONDITION_KEYS) {
     const name = CONDITIONS[k].name;
-    if (!out.has(name)) out.set(name, { label: name, detail: 'Condizione', boost: 0 });
+    if (!out.has(name)) out.set(name, { label: name, detail: m.wiki.condition, boost: 0 });
   }
   return [...out.values()];
 }

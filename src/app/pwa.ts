@@ -1,5 +1,6 @@
 import { registerSW } from 'virtual:pwa-register';
 import { toast } from '@/stores/toastStore';
+import { m } from '@/i18n';
 
 /**
  * Registra il service worker (solo nella build di produzione). Quando è pronta una nuova versione
@@ -10,13 +11,13 @@ export function setupPwa(): void {
   const update = registerSW({
     onNeedRefresh() {
       toast({
-        message: 'È disponibile una nuova versione di Codex.',
+        message: m.app.pwa.update,
         duration: 0,
-        action: { label: 'Aggiorna', onClick: () => void update(true) },
+        action: { label: m.app.pwa.updateAction, onClick: () => void update(true) },
       });
     },
     onOfflineReady() {
-      toast({ tone: 'success', message: 'Codex è pronto a funzionare anche offline.' });
+      toast({ tone: 'success', message: m.app.pwa.offlineReady });
     },
   });
 }

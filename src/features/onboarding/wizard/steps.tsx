@@ -1,10 +1,12 @@
-import { Dices } from 'lucide-react';
+import { Dices, Lightbulb } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ABILITY_LABELS, SKILL_LABELS } from '@/data/i18n/it';
 import { ARMOR, ARMOR_CATEGORY_LABELS, armorAcText } from '@/data/srd/armor';
 import { CLASSES, CLASSES_BY_KEY } from '@/data/srd/classes';
 import { RARE_LANGUAGES, STANDARD_LANGUAGES } from '@/data/srd/languages';
 import { WEAPONS } from '@/data/srd/weapons';
+import { CLASS_EQUIPMENT } from '@/data/srd/classEquipment';
+import { equipmentOptionLabel } from '@/features/inventory/classEquipment';
 import { ABILITIES, SKILLS, type Ability } from '@/domain/abilities';
 import { abilityMod } from '@/engine/abilities';
 import { cn } from '@/lib/cn';
@@ -25,6 +27,9 @@ import {
   checkAbilities,
   MASTERY_COUNT,
   originSkills,
+  recommendedArray,
+  recommendedScores,
+  suggestedBonus,
   POINT_BUY_BUDGET,
   POINT_BUY_COST,
   pointBuySpent,
@@ -35,6 +40,9 @@ import {
   type AbilityMethod,
   type WizardDraft,
 } from './logic';
+import { m } from '@/i18n';
+
+const W = m.onboarding.wizard;
 
 export interface StepProps {
   d: WizardDraft;
@@ -53,22 +61,22 @@ export function ConceptStep({ d, set }: StepProps) {
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldLabel label="Nome">
+        <FieldLabel label={W.name}>
           <input
-            aria-label="Nome"
+            aria-label={W.name}
             className={inputClass}
-            placeholder="es. Lyra Solmonte"
+            placeholder={W.namePlaceholder}
             value={d.name}
             onChange={(e) => set({ name: e.target.value })}
           />
         </FieldLabel>
-        <FieldLabel label="Allineamento">
+        <FieldLabel label={W.alignment}>
           <AlignmentSelect value={d.alignment} onValue={(alignment) => set({ alignment })} />
         </FieldLabel>
       </div>
 
       <fieldset className="space-y-3 rounded-lg border border-line p-3">
-        <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">Specie</legend>
+        <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">{W.species}</legend>
         <SpeciesFields
           lib={lib}
           value={{ speciesId: d.speciesId, choices: d.speciesChoices, customName: d.species }}
@@ -91,15 +99,15 @@ export function ConceptStep({ d, set }: StepProps) {
           }}
         />
         {!d.speciesId && (
-          <FieldLabel label="Taglia" className="max-w-xs">
+          <FieldLabel label={W.size} className="max-w-xs">
             <Select
-              label="Taglia"
+              label={W.size}
               value={d.size}
               onValue={(size) => set({ size })}
               options={[
-                { value: 'S', label: 'Piccola' },
-                { value: 'M', label: 'Media' },
-                { value: 'L', label: 'Grande' },
+                { value: 'S', label: m.terms.sizes.S },
+                { value: 'M', label: m.terms.sizes.M },
+                { value: 'L', label: m.terms.sizes.L },
               ]}
             />
           </FieldLabel>
@@ -108,7 +116,7 @@ export function ConceptStep({ d, set }: StepProps) {
 
       <fieldset className="space-y-3 rounded-lg border border-line p-3">
         <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Background
+          {W.background}
         </legend>
         <BackgroundFields
           lib={lib}
@@ -134,7 +142,7 @@ export function ConceptStep({ d, set }: StepProps) {
             />
           )}
         </BackgroundFields>
-        <Hint>Gli aumenti di caratteristica del background si scelgono al passo Caratteristiche.</Hint>
+        <Hint>{W.bonusLater}</Hint>
       </fieldset>
     </div>
   );
@@ -154,6 +162,7 @@ export function ClassStep({ d, set }: StepProps) {
               set({
                 classKey: c.key,
                 spellAbility: c.spellcastingAbility ?? '',
+                classEquipment: CLASS_EQUIPMENT[c.key] ? 'A' : 'none',
                 masteries: [],
               })
             }
@@ -164,38 +173,38 @@ export function ClassStep({ d, set }: StepProps) {
           >
             <span className="block font-medium">{c.name}</span>
             <span className="block text-xs text-muted">
-              d{c.hitDie} · TS {c.saves.map((s) => ABILITY_LABELS[s].short).join('/')}
-              {c.caster !== 'none' && ' · magia'}
+              d{c.hitDie} · {W.savesShort} {c.saves.map((s) => ABILITY_LABELS[s].short).join('/')}
+              {c.caster !== 'none' && W.magicTag}
             </span>
           </button>
         ))}
         <button
           type="button"
           aria-pressed={d.classKey === ''}
-          onClick={() => set({ classKey: '', masteries: [] })}
+          onClick={() => set({ classKey: '', masteries: [], classEquipment: 'none' })}
           className={cn(
             'rounded-lg border border-dashed p-3 text-left text-sm',
             d.classKey === '' ? 'border-accent bg-accent-soft' : 'border-line hover:border-accent/50',
           )}
         >
-          <span className="block font-medium">Personalizzata</span>
-          <span className="block text-xs text-muted">Classe non SRD</span>
+          <span className="block font-medium">{W.custom}</span>
+          <span className="block text-xs text-muted">{W.customHint}</span>
         </button>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         {!srd && (
-          <FieldLabel label="Nome della classe">
+          <FieldLabel label={W.className}>
             <input
-              aria-label="Nome della classe"
+              aria-label={W.className}
               className={inputClass}
               value={d.customClassName}
               onChange={(e) => set({ customClassName: e.target.value })}
             />
           </FieldLabel>
         )}
-        <FieldLabel label="Livello">
+        <FieldLabel label={W.level}>
           <input
-            aria-label="Livello"
+            aria-label={W.level}
             inputMode="numeric"
             className={inputClass}
             value={d.level}
@@ -205,9 +214,9 @@ export function ClassStep({ d, set }: StepProps) {
             }}
           />
         </FieldLabel>
-        <FieldLabel label="Sottoclasse">
+        <FieldLabel label={W.subclass}>
           <input
-            aria-label="Sottoclasse"
+            aria-label={W.subclass}
             className={inputClass}
             value={d.subclass}
             onChange={(e) => set({ subclass: e.target.value })}
@@ -216,8 +225,7 @@ export function ClassStep({ d, set }: StepProps) {
       </div>
       {srd && (
         <Hint>
-          Addestramento: armature {srd.armor.length ? srd.armor.join(', ') : 'nessuna'}; armi{' '}
-          {srd.weapons.join(', ')}. I privilegi di classe si aggiungono poi dalla scheda.
+          {W.training(srd.armor.length ? srd.armor.join(', ') : W.none, srd.weapons.join(', '))}
         </Hint>
       )}
     </div>
@@ -225,16 +233,20 @@ export function ClassStep({ d, set }: StepProps) {
 }
 
 const METHODS: Array<{ key: AbilityMethod; label: string }> = [
-  { key: 'standard', label: 'Serie standard' },
-  { key: 'pointbuy', label: 'Point buy (27)' },
-  { key: 'roll', label: 'Tira 4d6' },
-  { key: 'manual', label: 'Manuale' },
+  { key: 'standard', label: W.methods.standard },
+  { key: 'pointbuy', label: W.methods.pointbuy },
+  { key: 'roll', label: W.methods.roll },
+  { key: 'manual', label: W.methods.manual },
 ];
 
 export function AbilitiesStep({ d, set }: StepProps) {
   const check = checkAbilities(d);
   const bonus = backgroundBonus(d);
   const bg = useOriginLibrary().backgrounds.find((b) => b.id === d.backgroundId);
+  const srd = CLASSES_BY_KEY.get(d.classKey);
+  const rec = recommendedArray(d.classKey);
+  const suggested = recommendedScores(d);
+  const bonusTip = srd ? suggestedBonus(d.classKey, bg?.abilities) : [];
   const pool = d.method === 'standard' ? [...STANDARD_ARRAY] : d.rolled;
   const left = remainingPool(pool, d.scores);
 
@@ -243,7 +255,7 @@ export function AbilitiesStep({ d, set }: StepProps) {
       const options = [...new Set([d.scores[a], ...left].filter((v) => v > 0))].sort((x, y) => y - x);
       return (
         <select
-          aria-label={`${ABILITY_LABELS[a].long}: valore`}
+          aria-label={W.scoreOf(ABILITY_LABELS[a].long)}
           className={cn(inputClass, 'w-20')}
           value={d.scores[a] || ''}
           onChange={(e) => set({ scores: { ...d.scores, [a]: Number(e.target.value) || 0 } })}
@@ -263,7 +275,7 @@ export function AbilitiesStep({ d, set }: StepProps) {
         <Button
           size="sm"
           variant="ghost"
-          aria-label={`Diminuisci ${ABILITY_LABELS[a].long}`}
+          aria-label={m.common.decrease(ABILITY_LABELS[a].long)}
           disabled={d.scores[a] <= min}
           onClick={() => set({ scores: { ...d.scores, [a]: d.scores[a] - 1 } })}
         >
@@ -273,7 +285,7 @@ export function AbilitiesStep({ d, set }: StepProps) {
         <Button
           size="sm"
           variant="ghost"
-          aria-label={`Aumenta ${ABILITY_LABELS[a].long}`}
+          aria-label={m.common.increase(ABILITY_LABELS[a].long)}
           disabled={d.scores[a] >= max}
           onClick={() => set({ scores: { ...d.scores, [a]: d.scores[a] + 1 } })}
         >
@@ -285,36 +297,38 @@ export function AbilitiesStep({ d, set }: StepProps) {
 
   return (
     <div className="space-y-4">
-      <div role="radiogroup" aria-label="Metodo" className="flex flex-wrap gap-1">
-        {METHODS.map((m) => (
+      <div role="radiogroup" aria-label={W.method} className="flex flex-wrap gap-1">
+        {METHODS.map((mt) => (
           <button
-            key={m.key}
+            key={mt.key}
             type="button"
             role="radio"
-            aria-checked={d.method === m.key}
+            aria-checked={d.method === mt.key}
             onClick={() =>
-              set({ method: m.key, scores: scoresForMethod(m.key), rolled: m.key === 'roll' ? d.rolled : [] })
+              set({ method: mt.key, scores: scoresForMethod(mt.key), rolled: mt.key === 'roll' ? d.rolled : [] })
             }
             className={cn(
               'rounded-full border px-3 py-1 text-sm',
-              d.method === m.key
+              d.method === mt.key
                 ? 'border-accent bg-accent text-accent-ink'
                 : 'border-line text-muted hover:text-ink',
             )}
           >
-            {m.label}
+            {mt.label}
           </button>
         ))}
       </div>
 
-      {d.method === 'standard' && <Hint>Assegna 15, 14, 13, 12, 10 e 8, una volta ciascuno.</Hint>}
+      {d.method === 'standard' && <Hint>{W.standardHint}</Hint>}
       {d.method === 'pointbuy' && (
         <Hint>
-          Punti spesi: {Number.isFinite(pointBuySpent(d.scores)) ? pointBuySpent(d.scores) : '—'}/
-          {POINT_BUY_BUDGET} · costi:{' '}
-          {Object.entries(POINT_BUY_COST)
-            .map(([s, c]) => `${s}=${c}`)
-            .join(' ')}
+          {W.pointBuyHint(
+            Number.isFinite(pointBuySpent(d.scores)) ? String(pointBuySpent(d.scores)) : '—',
+            POINT_BUY_BUDGET,
+            Object.entries(POINT_BUY_COST)
+              .map(([s, c]) => `${s}=${c}`)
+              .join(' '),
+          )}
         </Hint>
       )}
       {d.method === 'roll' && (
@@ -324,19 +338,47 @@ export function AbilitiesStep({ d, set }: StepProps) {
             icon={Dices}
             onClick={() => set({ rolled: roll4d6DropLowest(), scores: scoresForMethod('roll') })}
           >
-            {d.rolled.length ? 'Ritira' : 'Tira 4d6 × 6'}
+            {d.rolled.length ? W.reroll : W.roll}
           </Button>
-          {d.rolled.length > 0 && <span className="text-sm tabular-nums">Valori: {d.rolled.join(', ')}</span>}
+          {d.rolled.length > 0 && <span className="text-sm tabular-nums">{W.rolledValues(d.rolled.join(', '))}</span>}
+        </div>
+      )}
+
+      {srd && rec && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-accent/40 bg-accent-soft/40 p-3">
+          <Lightbulb className="size-4 shrink-0 text-accent" aria-hidden />
+          <p className="min-w-60 flex-1 text-sm">
+            <span className="font-medium">{W.recommendedFor(srd.name)}</span>{' '}
+            {[...ABILITIES]
+              .sort((x, y) => rec[y] - rec[x])
+              .map((a) => `${ABILITY_LABELS[a].short} ${rec[a]}`)
+              .join(' · ')}
+            <span className="block text-xs text-muted">
+              {W.primary(srd.primary.length > 1)}:{' '}
+              {srd.primary.map((a) => ABILITY_LABELS[a].long).join(W.or)}.
+              {d.method === 'roll' && W.rollHint}
+            </span>
+          </p>
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={!suggested}
+            title={!suggested ? W.check.rollFirst : undefined}
+            onClick={() => suggested && set({ scores: suggested })}
+          >
+            {d.method === 'roll' ? W.assignRolls : W.useRecommended}
+          </Button>
         </div>
       )}
 
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-[11px] text-muted">
-            <th className="py-1 font-medium">Caratteristica</th>
-            <th className="py-1 font-medium">Base</th>
-            <th className="py-1 font-medium">Background</th>
-            <th className="py-1 font-medium">Totale</th>
+            <th className="py-1 font-medium">{W.colAbility}</th>
+            {rec && <th className="py-1 font-medium">{W.colRecommended}</th>}
+            <th className="py-1 font-medium">{W.colBase}</th>
+            <th className="py-1 font-medium">{W.colBackground}</th>
+            <th className="py-1 font-medium">{W.colTotal}</th>
           </tr>
         </thead>
         <tbody>
@@ -344,7 +386,15 @@ export function AbilitiesStep({ d, set }: StepProps) {
             const total = (d.scores[a] || 0) + bonus[a];
             return (
               <tr key={a} className="border-t border-line">
-                <td className="py-1.5">{ABILITY_LABELS[a].long}</td>
+                <td className="py-1.5">
+                  {ABILITY_LABELS[a].long}
+                  {srd?.primary.includes(a) && (
+                    <span className="ml-1.5 rounded bg-accent-soft px-1 text-[10px] font-semibold text-accent">
+                      {W.primaryTag}
+                    </span>
+                  )}
+                </td>
+                {rec && <td className="py-1.5 text-muted tabular-nums">{suggested?.[a] ?? rec[a]}</td>}
                 <td className="py-1.5">{scoreInput(a)}</td>
                 <td className="py-1.5 text-muted">{bonus[a] ? `+${bonus[a]}` : '—'}</td>
                 <td className="py-1.5 font-medium tabular-nums">
@@ -359,7 +409,7 @@ export function AbilitiesStep({ d, set }: StepProps) {
 
       <fieldset className="space-y-2 rounded-lg border border-line p-3">
         <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Aumenti del background
+          {W.backgroundIncreases}
         </legend>
         <BonusFields
           allowed={bg?.abilities}
@@ -367,11 +417,25 @@ export function AbilitiesStep({ d, set }: StepProps) {
           picks={d.bonusAbilities}
           onChange={(bonusMode, bonusAbilities) => set({ bonusMode, bonusAbilities })}
         />
+        {bonusTip.length === 2 && (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-muted">
+              {W.suggestedBonus(srd!.name, ABILITY_LABELS[bonusTip[0]!].short, ABILITY_LABELS[bonusTip[1]!].short)}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => set({ bonusMode: 'twoOne', bonusAbilities: bonusTip })}
+            >
+              {m.common.apply}
+            </Button>
+          </div>
+        )}
         <Hint>
           {bg
-            ? `${bg.name}: scegli tra ${bg.abilities.map((a) => ABILITY_LABELS[a].long).join(', ')}.`
-            : 'Nelle regole 2024 il background indica tre caratteristiche tra cui scegliere.'}{' '}
-          Nessun punteggio può superare 20.
+            ? W.chooseAmong(bg.name, bg.abilities.map((a) => ABILITY_LABELS[a].long).join(', '))
+            : W.rule2024}{' '}
+          {W.max20}
         </Hint>
       </fieldset>
     </div>
@@ -390,10 +454,9 @@ export function ProficienciesStep({ d, set }: StepProps) {
     <div className="space-y-5">
       <section className="space-y-2">
         <h3 className="text-sm font-medium">
-          Abilità{' '}
+          {W.skills}{' '}
           <span className="text-xs font-normal text-muted">
-            ({chosen.length} scelte · di solito {suggested}
-            {hasBackground ? ' dalla classe' : ': classe + background'})
+            {W.skillsCount(chosen.length, suggested, hasBackground)}
           </span>
         </h3>
         <div className="grid gap-1 sm:grid-cols-3">
@@ -408,29 +471,29 @@ export function ProficienciesStep({ d, set }: StepProps) {
                   onChange={() => set({ skills: toggle(d.skills, s) })}
                 />
                 {SKILL_LABELS[s]}
-                {fromOrigin && <span className="text-[10px]">(origine)</span>}
+                {fromOrigin && <span className="text-[10px]">{W.fromOrigin}</span>}
               </label>
             );
           })}
         </div>
       </section>
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldLabel label="Lingue">
+        <FieldLabel label={W.languages}>
           <TagInput
-            label="Lingue"
+            label={W.languages}
             values={d.languages}
             suggestions={[...STANDARD_LANGUAGES, ...RARE_LANGUAGES]}
             onChange={(languages) => set({ languages })}
           />
         </FieldLabel>
-        <FieldLabel label="Strumenti">
-          <TagInput label="Strumenti" values={d.tools} onChange={(tools) => set({ tools })} />
+        <FieldLabel label={W.tools}>
+          <TagInput label={W.tools} values={d.tools} onChange={(tools) => set({ tools })} />
         </FieldLabel>
       </div>
       {masteryCount > 0 && (
         <section className="space-y-2">
           <h3 className="text-sm font-medium">
-            Maestria nelle armi{' '}
+            {W.weaponMastery}{' '}
             <span className="text-xs font-normal text-muted">
               ({d.masteries.length}/{masteryCount})
             </span>
@@ -455,85 +518,143 @@ export function ProficienciesStep({ d, set }: StepProps) {
 }
 
 export function EquipmentStep({ d, set }: StepProps) {
-  const training = CLASSES_BY_KEY.get(d.classKey)?.armor ?? [];
+  const srd = CLASSES_BY_KEY.get(d.classKey);
+  const training = srd?.armor ?? [];
+  const options = CLASS_EQUIPMENT[d.classKey] ?? [];
+  const bg = useOriginLibrary().backgrounds.find((b) => b.id === d.backgroundId);
+  const manual = d.classEquipment === 'none' || !options.length;
+  const goldField = (
+    <FieldLabel label={manual ? W.gold : W.extraGold} className="max-w-48">
+      <input
+        aria-label={W.goldAria}
+        inputMode="numeric"
+        className={inputClass}
+        value={d.gold}
+        onChange={(e) => {
+          const n = Number(e.target.value);
+          if (Number.isInteger(n) && n >= 0) set({ gold: n });
+        }}
+      />
+    </FieldLabel>
+  );
+
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
-        <FieldLabel label="Armatura">
-          <Select
-            label="Armatura"
-            value={d.armorId}
-            onValue={(armorId) => set({ armorId })}
-            options={[
-              { value: '', label: 'Nessuna' },
-              ...ARMOR.filter((a) => a.category !== 'shield').map((a) => ({
-                value: a.id,
-                label: `${a.name} · ${ARMOR_CATEGORY_LABELS[a.category]} · CA ${armorAcText(a)}${training.length && !training.includes(a.category as never) ? ' (senza addestramento)' : ''}`,
-              })),
-            ]}
-          />
-        </FieldLabel>
-        <label className="flex items-center gap-2 pt-5 text-sm">
-          <input type="checkbox" checked={d.shield} onChange={(e) => set({ shield: e.target.checked })} />{' '}
-          Scudo
-        </label>
-        <FieldLabel label="Monete d’oro">
-          <input
-            aria-label="Monete d'oro"
-            inputMode="numeric"
-            className={inputClass}
-            value={d.gold}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (Number.isInteger(n) && n >= 0) set({ gold: n });
-            }}
-          />
-        </FieldLabel>
-      </div>
-      <section className="space-y-2">
-        <h3 className="text-sm font-medium">Armi</h3>
-        <div className="grid gap-1 sm:grid-cols-4">
-          {WEAPONS.map((w) => (
-            <label key={w.id} className="flex items-center gap-2 text-sm">
+      {srd && options.length > 0 && (
+        <fieldset className="space-y-2 rounded-lg border border-line p-3">
+          <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">
+            {W.classEquipment(srd.name)}
+          </legend>
+          {options.map((o) => (
+            <label key={o.key} className="flex items-start gap-2 text-sm">
               <input
-                type="checkbox"
-                checked={d.weaponIds.includes(w.id)}
-                onChange={() => set({ weaponIds: toggle(d.weaponIds, w.id) })}
+                type="radio"
+                className="mt-1"
+                checked={d.classEquipment === o.key}
+                onChange={() => set({ classEquipment: o.key })}
               />
-              {w.name}
+              <span>
+                <span className="font-medium">{o.key}:</span> {equipmentOptionLabel(o)}
+              </span>
             </label>
           ))}
-        </div>
-      </section>
-      <Hint>Il resto dell’equipaggiamento (zaino, razioni, focus…) si aggiunge dall’Inventario.</Hint>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="radio"
+              className="mt-1"
+              checked={d.classEquipment === 'none'}
+              onChange={() => set({ classEquipment: 'none' })}
+            />
+            {W.chooseOwn}
+          </label>
+          <Hint>{W.equippedHint}</Hint>
+        </fieldset>
+      )}
+
+      {bg && d.backgroundEquipment !== 'none' && (
+        <Hint>
+          {W.fromBackground(
+            bg.name,
+            d.backgroundEquipment,
+            d.backgroundEquipment === 'A'
+              ? [
+                  ...bg.equipment.map((e) => (e.quantity > 1 ? `${e.name} ×${e.quantity}` : e.name)),
+                  ...(bg.equipmentGoldInA ? [`${bg.equipmentGoldInA} ${W.gp}`] : []),
+                ].join(', ')
+              : `${bg.equipmentGold} ${W.gp}`,
+          )}
+        </Hint>
+      )}
+
+      {manual ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
+            <FieldLabel label={W.armor}>
+              <Select
+                label={W.armor}
+                value={d.armorId}
+                onValue={(armorId) => set({ armorId })}
+                options={[
+                  { value: '', label: W.noArmor },
+                  ...ARMOR.filter((a) => a.category !== 'shield').map((a) => ({
+                    value: a.id,
+                    label: `${a.name} · ${ARMOR_CATEGORY_LABELS[a.category]} · ${W.ac} ${armorAcText(a)}${training.length && !training.includes(a.category as never) ? W.untrained : ''}`,
+                  })),
+                ]}
+              />
+            </FieldLabel>
+            <label className="flex items-center gap-2 pt-5 text-sm">
+              <input type="checkbox" checked={d.shield} onChange={(e) => set({ shield: e.target.checked })} />{' '}
+              {W.shield}
+            </label>
+            {goldField}
+          </div>
+          <section className="space-y-2">
+            <h3 className="text-sm font-medium">{W.weapons}</h3>
+            <div className="grid gap-1 sm:grid-cols-4">
+              {WEAPONS.map((w) => (
+                <label key={w.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={d.weaponIds.includes(w.id)}
+                    onChange={() => set({ weaponIds: toggle(d.weaponIds, w.id) })}
+                  />
+                  {w.name}
+                </label>
+              ))}
+            </div>
+          </section>
+          <Hint>{W.restOfGear}</Hint>
+        </>
+      ) : (
+        goldField
+      )}
     </div>
   );
 }
-
 export function MagicStep({ d, set }: StepProps) {
   const srd = CLASSES_BY_KEY.get(d.classKey);
   const casts = srd ? srd.caster !== 'none' : true;
   if (!casts) {
     return (
-      <p className="text-sm text-muted">{srd?.name} non lancia incantesimi. Puoi saltare questo passo.</p>
+      <p className="text-sm text-muted">{W.noMagic(srd?.name ?? '')}</p>
     );
   }
   return (
     <div className="space-y-3">
-      <FieldLabel label="Caratteristica da incantatore" className="max-w-xs">
+      <FieldLabel label={W.castingAbility} className="max-w-xs">
         <Select
-          label="Caratteristica da incantatore"
+          label={W.castingAbility}
           value={d.spellAbility}
           onValue={(v) => set({ spellAbility: v })}
           options={[
-            { value: '', label: srd ? '—' : 'Nessuna (non incantatore)' },
+            { value: '', label: srd ? '—' : W.notCaster },
             ...(['int', 'wis', 'cha'] as Ability[]).map((a) => ({ value: a, label: ABILITY_LABELS[a].long })),
           ]}
         />
       </FieldLabel>
       <Hint>
-        Slot, CD e bonus d’attacco si calcolano da soli. Gli incantesimi si aggiungono poi dal Grimorio
-        (libreria o import 5etools).
+        {W.magicHint}
       </Hint>
     </div>
   );

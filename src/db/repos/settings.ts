@@ -1,4 +1,5 @@
 import type { ID } from '@/domain/primitives';
+import { pick } from '@/i18n/locale';
 import { db } from '../db';
 
 /** Id dei dati dimostrativi caricati con "Carica esempio", per poterli rimuovere in un clic. */
@@ -17,7 +18,8 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  units: 'metric',
+  // In inglese si parte da piedi e libbre, come nei manuali originali.
+  units: pick('metric', 'imperial'),
   lastBackupAt: null,
   example: null,
 };

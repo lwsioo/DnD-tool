@@ -19,6 +19,9 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { formatCost, formatWeight } from '@/lib/units';
 import { useUiStore } from '@/stores/uiStore';
 import { InspectorChip } from '@/ui/InspectorChip';
+import { m } from '@/i18n';
+
+const C = m.misc.compendium;
 
 /** Consultazione rapida della libreria SRD integrata: ogni voce si apre nell'Inspector. */
 export function CompendiumPage() {
@@ -26,12 +29,9 @@ export function CompendiumPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-6">
-      <p className="text-sm text-muted">
-        Regole di riferimento sempre a portata di clic. Seleziona una voce per leggerla nel pannello a destra
-        senza lasciare la pagina.
-      </p>
+      <p className="text-sm text-muted">{C.intro}</p>
 
-      <Block title="Condizioni">
+      <Block title={C.conditions}>
         <div className="flex flex-wrap gap-2">
           {CONDITION_KEYS.map((k) => (
             <InspectorChip key={k} to={{ kind: 'condition', key: k }} title={CONDITIONS[k].summary}>
@@ -42,7 +42,7 @@ export function CompendiumPage() {
       </Block>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <Block title="Proprietà delle armi">
+        <Block title={C.properties}>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(WEAPON_PROPERTIES) as WeaponPropertyKey[]).map((k) => (
               <InspectorChip key={k} to={{ kind: 'property', key: k }} title={WEAPON_PROPERTIES[k].summary}>
@@ -51,7 +51,7 @@ export function CompendiumPage() {
             ))}
           </div>
         </Block>
-        <Block title="Maestrie nelle armi">
+        <Block title={C.masteries}>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(WEAPON_MASTERIES) as MasteryKey[]).map((k) => (
               <InspectorChip key={k} to={{ kind: 'mastery', key: k }} title={WEAPON_MASTERIES[k].summary}>
@@ -64,12 +64,12 @@ export function CompendiumPage() {
 
       <OriginBlocks />
 
-      <Block title="Armi">
+      <Block title={C.weapons}>
         <WeaponTable weapons={WEAPONS} />
       </Block>
 
-      <Block title="Armature e scudi">
-        <Table head={['Armatura', 'Categoria', 'CA', 'Forza', 'Furtività', 'Peso', 'Costo']}>
+      <Block title={C.armor}>
+        <Table head={C.armorHead}>
           {ARMOR.map((a) => (
             <tr key={a.id} className="border-t border-line">
               <td className="py-1.5 pr-3">
@@ -78,7 +78,7 @@ export function CompendiumPage() {
               <td className="pr-3 text-muted">{ARMOR_CATEGORY_LABELS[a.category]}</td>
               <td className="pr-3 tabular-nums">{armorAcText(a)}</td>
               <td className="pr-3 tabular-nums">{a.strRequirement ?? '—'}</td>
-              <td className="pr-3">{a.stealthDisadvantage ? 'Svantaggio' : '—'}</td>
+              <td className="pr-3">{a.stealthDisadvantage ? C.disadvantage : '—'}</td>
               <td className="pr-3 tabular-nums">{formatWeight(a.weightLb, units)}</td>
               <td className="tabular-nums">{formatCost(a.costCp)}</td>
             </tr>
@@ -92,7 +92,7 @@ export function CompendiumPage() {
 }
 
 const imported = (d: { origin: string; sourceBook?: string }) =>
-  d.origin !== 'srd' ? ` (${d.sourceBook ?? 'importato'})` : '';
+  d.origin !== 'srd' ? ` (${d.sourceBook ?? C.imported})` : '';
 
 /** Specie, background e talenti: SRD integrati più quelli importati in libreria. */
 function OriginBlocks() {
@@ -104,9 +104,9 @@ function OriginBlocks() {
       'species' | 'background' | 'feat',
     ]
   > = [
-    ['Specie', lib.species, 'species'],
-    ['Background', lib.backgrounds, 'background'],
-    ['Talenti', lib.feats, 'feat'],
+    [C.species, lib.species, 'species'],
+    [C.backgrounds, lib.backgrounds, 'background'],
+    [C.feats, lib.feats, 'feat'],
   ];
   return (
     <div className="grid gap-8 md:grid-cols-3">
@@ -129,13 +129,13 @@ function OriginBlocks() {
 function WeaponTable({ weapons }: { weapons: WeaponBase[] }) {
   const { units } = useAppSettings();
   const groups: Array<[string, WeaponBase[]]> = [
-    ['Semplici da mischia', weapons.filter((w) => w.category === 'simple' && w.type === 'melee')],
-    ['Semplici a distanza', weapons.filter((w) => w.category === 'simple' && w.type === 'ranged')],
-    ['Da guerra da mischia', weapons.filter((w) => w.category === 'martial' && w.type === 'melee')],
-    ['Da guerra a distanza', weapons.filter((w) => w.category === 'martial' && w.type === 'ranged')],
+    [C.simpleMelee, weapons.filter((w) => w.category === 'simple' && w.type === 'melee')],
+    [C.simpleRanged, weapons.filter((w) => w.category === 'simple' && w.type === 'ranged')],
+    [C.martialMelee, weapons.filter((w) => w.category === 'martial' && w.type === 'melee')],
+    [C.martialRanged, weapons.filter((w) => w.category === 'martial' && w.type === 'ranged')],
   ];
   return (
-    <Table head={['Arma', 'Danni', 'Proprietà', 'Maestria', 'Peso', 'Costo']}>
+    <Table head={C.weaponHead}>
       {groups.map(([label, list]) => [
         <tr key={label}>
           <th colSpan={6} className="pt-4 pb-1 text-left text-xs font-semibold text-accent">

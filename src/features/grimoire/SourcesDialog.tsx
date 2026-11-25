@@ -10,6 +10,7 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { FieldLabel, Select, TextField } from '@/ui/fields';
 import { IconButton } from '@/ui/IconButton';
+import { m } from '@/i18n';
 
 const ABILITY_OPTIONS = (['int', 'wis', 'cha', 'str', 'dex', 'con'] as Ability[]).map((a) => ({
   value: a,
@@ -33,19 +34,19 @@ export function SourcesDialog({ character, vars, mutate, mutateLater, onClose }:
     <Dialog
       open
       onClose={onClose}
-      title="Fonti da incantatore"
-      footer={<Button onClick={onClose}>Chiudi</Button>}
+      title={m.grimoire.sourcesTitle}
+      footer={<Button onClick={onClose}>{m.common.close}</Button>}
     >
       <div className="space-y-3">
-        {sources.length === 0 && <p className="text-muted">Nessuna fonte: aggiungine una per iniziare.</p>}
+        {sources.length === 0 && <p className="text-muted">{m.grimoire.noSourcesYet}</p>}
         {sources.map((s) => (
           <div
             key={s.id}
             className="grid items-end gap-2 rounded-lg border border-line p-2 sm:grid-cols-[1.5fr_1.2fr_1fr_auto]"
           >
-            <FieldLabel label="Nome">
+            <FieldLabel label={m.grimoire.name}>
               <TextField
-                label="Nome della fonte"
+                label={m.grimoire.sourceName}
                 value={s.label}
                 onValue={(v) =>
                   mutateLater(
@@ -55,9 +56,9 @@ export function SourcesDialog({ character, vars, mutate, mutateLater, onClose }:
                 }
               />
             </FieldLabel>
-            <FieldLabel label="Caratteristica">
+            <FieldLabel label={m.grimoire.ability}>
               <Select
-                label={`Caratteristica di ${s.label}`}
+                label={m.grimoire.abilityOf(s.label)}
                 value={s.ability}
                 options={ABILITY_OPTIONS}
                 onValue={(v) =>
@@ -65,10 +66,10 @@ export function SourcesDialog({ character, vars, mutate, mutateLater, onClose }:
                 }
               />
             </FieldLabel>
-            <FieldLabel label="Preparati max">
+            <FieldLabel label={m.grimoire.preparedMax}>
               <TextField
-                label={`Massimo preparati di ${s.label}`}
-                placeholder="es. 4"
+                label={m.grimoire.preparedMaxOf(s.label)}
+                placeholder={m.grimoire.preparedPlaceholder}
                 value={s.preparedMax ?? ''}
                 onValue={(v) =>
                   mutateLater(
@@ -82,9 +83,9 @@ export function SourcesDialog({ character, vars, mutate, mutateLater, onClose }:
             </FieldLabel>
             <IconButton
               icon={X}
-              label={`Rimuovi ${s.label}`}
+              label={m.common.remove(s.label)}
               disabled={used(s.id) > 0}
-              title={used(s.id) > 0 ? 'Ha incantesimi assegnati' : undefined}
+              title={used(s.id) > 0 ? m.grimoire.hasSpells : undefined}
               onClick={() =>
                 mutate(
                   (d) => void (d.spellcasting.sources = d.spellcasting.sources.filter((x) => x.id !== s.id)),
@@ -98,15 +99,14 @@ export function SourcesDialog({ character, vars, mutate, mutateLater, onClose }:
           icon={Plus}
           onClick={() =>
             mutate(
-              (d) => void d.spellcasting.sources.push({ id: newId(), label: 'Nuova fonte', ability: 'int' }),
+              (d) => void d.spellcasting.sources.push({ id: newId(), label: m.grimoire.newSource, ability: 'int' }),
             )
           }
         >
-          Aggiungi fonte
+          {m.grimoire.addSource}
         </Button>
         <p className="text-xs text-muted">
-          Es. una classe (Mago · INT) o un talento come Iniziato alla Magia (SAG). La CD e il bonus d’attacco
-          si calcolano da soli.
+          {m.grimoire.sourcesHint}
         </p>
       </div>
     </Dialog>

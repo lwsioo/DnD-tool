@@ -23,6 +23,7 @@ import { MetaEditor } from './MetaEditor';
 import { MetaSummary } from './MetaSummary';
 import { linkOptions } from './wikilink/completion';
 import { useWikiLinks } from './wikilink/WikiLinkContext';
+import { m } from '@/i18n';
 
 /** Una voce della wiki: lettura con backlink, oppure modifica con salvataggio automatico. */
 export function EntryPage({ entryId }: { entryId: ID }) {
@@ -33,7 +34,7 @@ export function EntryPage({ entryId }: { entryId: ID }) {
 
   if (entry === undefined) return null;
   if (entry === null)
-    return <p className="p-6 text-sm text-muted">Voce non trovata: forse è stata eliminata.</p>;
+    return <p className="p-6 text-sm text-muted">{m.wiki.entryNotFound}</p>;
   return editing ? (
     <EntryEditor key={entry.id} entry={entry} onDone={() => setEditing(false)} />
   ) : (
@@ -51,10 +52,10 @@ function EntryView({ entry, onEdit }: { entry: WikiEntry; onEdit: () => void }) 
     await wikiRepo.remove(entry.id);
     navigate(`/campagna/${entry.campaignId}/${info.slug}`);
     toast({
-      message: `“${entry.title}” eliminata.`,
+      message: m.wiki.entryDeleted(entry.title),
       duration: 10_000,
       action: {
-        label: 'Annulla',
+        label: m.common.undo,
         onClick: async () => {
           await wikiRepo.save(entry);
           navigate(`/campagna/${entry.campaignId}/${info.slug}/${entry.id}`);
@@ -72,14 +73,14 @@ function EntryView({ entry, onEdit }: { entry: WikiEntry; onEdit: () => void }) 
           </p>
           <h2 className="font-display text-2xl tracking-wide">{entry.title}</h2>
           {entry.aliases.length > 0 && (
-            <p className="text-sm text-muted italic">anche: {entry.aliases.join(', ')}</p>
+            <p className="text-sm text-muted italic">{m.wiki.alsoKnownAs(entry.aliases.join(', '))}</p>
           )}
         </div>
         <Button size="sm" icon={Pencil} onClick={onEdit}>
-          Modifica
+          {m.wiki.edit}
         </Button>
         <Button size="sm" variant="ghost" icon={Trash2} onClick={() => void remove()}>
-          Elimina
+          {m.wiki.delete}
         </Button>
       </header>
 
@@ -89,20 +90,20 @@ function EntryView({ entry, onEdit }: { entry: WikiEntry; onEdit: () => void }) 
         <MarkdownView>{entry.body}</MarkdownView>
       ) : (
         <p className="text-sm text-muted">
-          Nessun testo.{' '}
+          {m.wiki.noText}{' '}
           <button type="button" className="text-accent hover:underline" onClick={onEdit}>
-            Scrivi qualcosa
+            {m.wiki.writeSomething}
           </button>
-          ; usa <code>[[Nome]]</code> per collegare altre voci.
+          {m.wiki.linkHint}
         </p>
       )}
 
-      <section aria-label="Menzionato in" className="space-y-2 border-t border-line pt-4">
+      <section aria-label={m.wiki.mentionedIn} className="space-y-2 border-t border-line pt-4">
         <h3 className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-muted uppercase">
-          <Link2 className="size-3.5" aria-hidden /> Menzionato in ({backlinks.length})
+          <Link2 className="size-3.5" aria-hidden /> {m.wiki.mentionedInCount(backlinks.length)}
         </h3>
         {backlinks.length === 0 ? (
-          <p className="text-sm text-muted">Nessuna nota collega ancora questa voce.</p>
+          <p className="text-sm text-muted">{m.wiki.noBacklinks}</p>
         ) : (
           <ul className="space-y-2">
             {backlinks.map((b) => (
@@ -118,7 +119,7 @@ function EntryView({ entry, onEdit }: { entry: WikiEntry; onEdit: () => void }) 
                 >
                   {b.category ? CATEGORY_INFO[b.category].icon : '🧙'} {b.title}
                 </button>
-                {b.viaMeta && <span className="ml-2 text-xs text-muted">(nei dati della voce)</span>}
+                {b.viaMeta && <span className="ml-2 text-xs text-muted">{m.wiki.viaMeta}</span>}
                 {b.snippets.map((s) => (
                   <p key={s} className="mt-1 text-xs text-muted">
                     {s}
@@ -161,7 +162,7 @@ function EntryEditor({ entry, onDone }: { entry: WikiEntry; onDone: () => void }
   useEffect(() => () => void flush(), []);
 
   const finish = async () => {
-    if (!draft.title.trim()) return toast({ tone: 'error', message: 'Il titolo non può essere vuoto.' });
+    if (!draft.title.trim()) return toast({ tone: 'error', message: m.wiki.emptyTitle });
     await flush();
     const old = originalTitle.current;
     if (old !== draft.title) {
@@ -175,7 +176,7 @@ function EntryEditor({ entry, onDone }: { entry: WikiEntry; onDone: () => void }
     setRename(null);
     if (propagate) {
       const n = await propagateRename(entry.campaignId, originalTitle.current, draft.title);
-      toast({ tone: 'success', message: `${n} collegamenti aggiornati.` });
+      toast({ tone: 'success', message: m.wiki.linksUpdated(n) });
     }
     onDone();
   };
@@ -184,32 +185,32 @@ function EntryEditor({ entry, onDone }: { entry: WikiEntry; onDone: () => void }
     <div className="mx-auto max-w-3xl space-y-4 p-4 lg:p-6">
       <div className="flex items-center gap-2">
         <p className="flex-1 text-xs font-semibold tracking-wider text-muted uppercase">
-          {CATEGORY_INFO[entry.category].icon} Modifica {CATEGORY_INFO[entry.category].singular.toLowerCase()}{' '}
-          · salvataggio automatico
+          {CATEGORY_INFO[entry.category].icon} {m.wiki.editing(CATEGORY_INFO[entry.category].singular)}{' '}
+          {m.wiki.autosave}
         </p>
         <Button size="sm" variant="primary" icon={Check} onClick={() => void finish()}>
-          Fine
+          {m.wiki.finish}
         </Button>
       </div>
 
-      <FieldLabel label="Titolo">
+      <FieldLabel label={m.wiki.title}>
         <input
-          aria-label="Titolo"
+          aria-label={m.wiki.title}
           className={cn(inputClass, 'font-display text-xl tracking-wide')}
           value={draft.title}
           onChange={(e) => update({ ...draft, title: e.target.value })}
         />
       </FieldLabel>
       <div className="grid gap-3 sm:grid-cols-2">
-        <FieldLabel label="Altri nomi (alias)">
+        <FieldLabel label={m.wiki.aliases}>
           <TagInput
-            label="Alias"
+            label={m.wiki.alias}
             values={draft.aliases}
             onChange={(aliases) => update({ ...draft, aliases })}
           />
         </FieldLabel>
-        <FieldLabel label="Tag">
-          <TagInput label="Tag" values={draft.tags} onChange={(tags) => update({ ...draft, tags })} />
+        <FieldLabel label={m.wiki.tags}>
+          <TagInput label={m.wiki.tags} values={draft.tags} onChange={(tags) => update({ ...draft, tags })} />
         </FieldLabel>
       </div>
 
@@ -217,31 +218,29 @@ function EntryEditor({ entry, onDone }: { entry: WikiEntry; onDone: () => void }
 
       <div className="space-y-1">
         <span className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Testo (Markdown)
+          {m.wiki.bodyLabel}
         </span>
         <Suspense fallback={<div className="h-56 animate-pulse rounded-lg border border-line bg-bg" />}>
           <MarkdownEditor
-            label="Testo della voce"
+            label={m.wiki.bodyAria}
             value={draft.body}
             linkOptions={options}
             onChange={(body) => update({ ...draft, body })}
           />
         </Suspense>
         <p className="text-[11px] text-muted">
-          Scrivi <code>[[</code> per collegare voci, incantesimi e condizioni; <code>[[Nome|testo]]</code> per
-          mostrare un testo diverso.
+          {m.wiki.editorHint}
         </p>
       </div>
 
       <ConfirmDialog
         open={rename !== null}
-        title="Aggiornare i collegamenti?"
-        confirmLabel="Aggiorna"
+        title={m.wiki.renameTitle}
+        confirmLabel={m.wiki.renameConfirm}
         onCancel={() => void applyRename(false)}
         onConfirm={() => void applyRename(true)}
       >
-        Hai rinominato “{originalTitle.current}” in “{draft.title}”. Ci sono {rename?.links} collegamenti in{' '}
-        {rename?.sources} note che usano il vecchio nome: vuoi aggiornarli?
+        {m.wiki.renameBody(originalTitle.current, draft.title, rename?.links ?? 0, rename?.sources ?? 0)}
       </ConfirmDialog>
     </div>
   );

@@ -6,8 +6,11 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { formatDistance, type Units } from '@/lib/units';
 import { FieldLabel, inputClass, Select } from '@/ui/fields';
 import type { FeatChoices, OriginLibrary, SpeciesChoices } from './applyOrigin';
+import { m } from '@/i18n';
 
-const SIZE_LABELS = { S: 'Piccola', M: 'Media', L: 'Grande' } as const;
+const O = m.misc.origins;
+
+const SIZE_LABELS = m.terms.sizes;
 const CASTING: Ability[] = ['int', 'wis', 'cha'];
 
 const label = (d: { name: string; origin: string; sourceBook?: string }) =>
@@ -46,7 +49,7 @@ function SkillPicks({
             onChange(next.filter(Boolean));
           }}
           options={[
-            { value: '', label: '— abilità —' },
+            { value: '', label: O.pickSkill },
             ...pool
               .filter((s) => s === value[i] || !value.includes(s))
               .map((s) => ({ value: s, label: SKILL_LABELS[s] })),
@@ -95,9 +98,9 @@ export function FeatFields({
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {lists.length > 0 && !fixedList && (
-        <FieldLabel label="Lista di incantesimi">
+        <FieldLabel label={O.spellList}>
           <Select
-            label={`${feat.name}: lista di incantesimi`}
+            label={O.featSpellList(feat.name)}
             value={value.spellList ?? lists[0]!}
             onValue={(spellList) => onChange({ ...value, spellList })}
             options={lists.map((l) => ({ value: l, label: l }))}
@@ -106,24 +109,24 @@ export function FeatFields({
       )}
       {lists.length > 0 && (
         <AbilityPick
-          label={`${feat.name}: caratteristica da incantatore`}
+          label={O.featAbility(feat.name)}
           value={value.spellAbility}
           onValue={(spellAbility) => onChange({ ...value, spellAbility })}
         />
       )}
       {(feat.skillChoices ?? 0) > 0 && (
         <div className="space-y-1 sm:col-span-2">
-          <p className="text-xs text-muted">{feat.name}: competenze a scelta</p>
+          <p className="text-xs text-muted">{O.featSkillsTitle(feat.name)}</p>
           <SkillPicks
             count={feat.skillChoices!}
-            name={`${feat.name}: abilità`}
+            name={O.featSkill(feat.name)}
             value={value.skills ?? []}
             onChange={(skills) => onChange({ ...value, skills })}
           />
         </div>
       )}
       {lists.length > 0 && (
-        <Hint>Gli incantesimi concessi si aggiungono poi dal Grimorio, sotto la nuova fonte.</Hint>
+        <Hint>{O.grantedSpells}</Hint>
       )}
     </div>
   );
@@ -155,32 +158,32 @@ export function SpeciesFields({
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
-        <FieldLabel label="Specie">
+        <FieldLabel label={O.species}>
           <Select
-            label="Specie"
+            label={O.species}
             value={value.speciesId}
             onValue={(speciesId) => onChange({ speciesId, choices: {} })}
             options={[
-              { value: '', label: 'Personalizzata (testo libero)' },
+              { value: '', label: O.customSpecies },
               ...lib.species.map((s) => ({ value: s.id, label: label(s) })),
             ]}
           />
         </FieldLabel>
         {!def && (
-          <FieldLabel label="Nome della specie">
+          <FieldLabel label={O.speciesName}>
             <input
-              aria-label="Nome della specie"
+              aria-label={O.speciesName}
               className={inputClass}
-              placeholder="es. Aasimar, Mezzelfo…"
+              placeholder={O.speciesPlaceholder}
               value={value.customName}
               onChange={(e) => onChange({ customName: e.target.value })}
             />
           </FieldLabel>
         )}
         {def && def.sizes.length > 1 && (
-          <FieldLabel label="Taglia">
+          <FieldLabel label={O.size}>
             <Select
-              label="Taglia"
+              label={O.size}
               value={
                 ch.size && def.sizes.includes(ch.size)
                   ? ch.size
@@ -200,7 +203,7 @@ export function SpeciesFields({
               value={ch.optionKey ?? ''}
               onValue={(optionKey) => setCh({ optionKey: optionKey || undefined })}
               options={[
-                { value: '', label: '— scegli —' },
+                { value: '', label: O.choose },
                 ...def.choice.options.map((o) => ({ value: o.key, label: o.name })),
               ]}
             />
@@ -208,7 +211,7 @@ export function SpeciesFields({
         )}
         {option?.grantsSpells && (
           <AbilityPick
-            label="Caratteristica per gli incantesimi di specie"
+            label={O.speciesAbility}
             value={ch.spellAbility}
             onValue={(spellAbility) => setCh({ spellAbility })}
           />
@@ -219,11 +222,11 @@ export function SpeciesFields({
 
       {def?.skillChoice && (
         <div className="space-y-1">
-          <p className="text-xs text-muted">Competenza a scelta della specie</p>
+          <p className="text-xs text-muted">{O.speciesSkillTitle}</p>
           <SkillPicks
             count={def.skillChoice.count}
             from={def.skillChoice.from}
-            name="Abilità della specie"
+            name={O.speciesSkill}
             value={ch.skills ?? []}
             onChange={(skills) => setCh({ skills })}
           />
@@ -232,13 +235,13 @@ export function SpeciesFields({
 
       {def?.originFeat && (
         <div className="space-y-2 rounded-lg border border-line p-3">
-          <FieldLabel label="Talento d’origine (Versatile)">
+          <FieldLabel label={O.versatile}>
             <Select
-              label="Talento d’origine della specie"
+              label={O.speciesFeat}
               value={ch.featId ?? ''}
               onValue={(featId) => setCh({ featId: featId || undefined, feat: {} })}
               options={[
-                { value: '', label: '— scegli —' },
+                { value: '', label: O.choose },
                 ...lib.feats
                   .filter((f) => f.category === 'origin')
                   .map((f) => ({ value: f.id, label: label(f) })),
@@ -254,14 +257,14 @@ export function SpeciesFields({
 
 function SpeciesSummary({ def, units }: { def: SpeciesDef; units: Units }) {
   const facts = [
-    def.sizes.map((s) => SIZE_LABELS[s]).join(' o '),
-    `velocità ${formatDistance(def.speed, units)}`,
-    def.darkvision ? `scurovisione ${formatDistance(def.darkvision, units)}` : null,
+    def.sizes.map((s) => SIZE_LABELS[s]).join(O.or),
+    O.speed(formatDistance(def.speed, units)),
+    def.darkvision ? O.darkvision(formatDistance(def.darkvision, units)) : null,
   ].filter(Boolean);
   return (
     <Hint>
-      {facts.join(' · ')} — tratti: {def.traits.map((t) => t.name).join(', ')}
-      {def.choice ? `, più la scelta di ${def.choice.label.toLowerCase()}` : ''}.
+      {O.traits(facts.join(' · '), def.traits.map((t) => t.name).join(', '))}
+      {def.choice ? O.plusChoice(def.choice.label.toLowerCase()) : ''}.
     </Hint>
   );
 }
@@ -289,23 +292,23 @@ export function BackgroundFields({
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
-        <FieldLabel label="Background">
+        <FieldLabel label={O.background0}>
           <Select
-            label="Background"
+            label={O.background0}
             value={value.backgroundId}
             onValue={(backgroundId) => onChange({ backgroundId, feat: {} })}
             options={[
-              { value: '', label: 'Personalizzato (testo libero)' },
+              { value: '', label: O.customBackground },
               ...lib.backgrounds.map((b) => ({ value: b.id, label: label(b) })),
             ]}
           />
         </FieldLabel>
         {!def && (
-          <FieldLabel label="Nome del background">
+          <FieldLabel label={O.backgroundName}>
             <input
-              aria-label="Nome del background"
+              aria-label={O.backgroundName}
               className={inputClass}
-              placeholder="es. Artigiano, Nobile…"
+              placeholder={O.backgroundPlaceholder}
               value={value.customName}
               onChange={(e) => onChange({ customName: e.target.value })}
             />
@@ -329,9 +332,12 @@ export function BackgroundFields({
 export function BackgroundSummary({ def }: { def: BackgroundDef }) {
   return (
     <Hint>
-      Caratteristiche: {def.abilities.map((a) => ABILITY_LABELS[a].short).join(', ')} · talento:{' '}
-      {def.featName ?? def.featId ?? '—'} · abilità: {def.skills.map((s) => SKILL_LABELS[s]).join(', ')}
-      {def.tools.length > 0 && <> · strumenti: {def.tools.join(', ')}</>}
+      {O.bgSummary(
+        def.abilities.map((a) => ABILITY_LABELS[a].short).join(', '),
+        def.featName ?? def.featId ?? '—',
+        def.skills.map((s) => SKILL_LABELS[s]).join(', '),
+      )}
+      {def.tools.length > 0 && O.bgTools(def.tools.join(', '))}
     </Hint>
   );
 }
@@ -348,13 +354,13 @@ export function EquipmentChoice({
 }) {
   const items = def.equipment.map((e) => (e.quantity > 1 ? `${e.name} ×${e.quantity}` : e.name)).join(', ');
   const opts: Array<['A' | 'B' | 'none', string]> = [
-    ['A', `A: ${items}${def.equipmentGoldInA ? `, ${def.equipmentGoldInA} mo` : ''}`],
-    ['B', `B: ${def.equipmentGold} mo`],
-    ['none', 'Nessuno (lo aggiungo io)'],
+    ['A', `A: ${items}${def.equipmentGoldInA ? `, ${def.equipmentGoldInA} ${O.gp}` : ''}`],
+    ['B', `B: ${def.equipmentGold} ${O.gp}`],
+    ['none', O.noEquipment],
   ];
   return (
     <fieldset className="space-y-1">
-      <legend className="mb-1 text-xs text-muted">Equipaggiamento del background</legend>
+      <legend className="mb-1 text-xs text-muted">{O.bgEquipment}</legend>
       {opts.map(([k, text]) => (
         <label key={k} className="flex items-start gap-2 text-sm">
           <input type="radio" className="mt-1" checked={value === k} onChange={() => onChange(k)} />
@@ -381,10 +387,10 @@ export function BonusFields({
   return (
     <div className="space-y-2">
       <div className="flex gap-3 text-sm">
-        {(['twoOne', 'threeOnes'] as const).map((m) => (
-          <label key={m} className="flex items-center gap-1.5">
-            <input type="radio" checked={mode === m} onChange={() => onChange(m, [])} />
-            {m === 'twoOne' ? '+2 e +1' : '+1, +1 e +1'}
+        {(['twoOne', 'threeOnes'] as const).map((md) => (
+          <label key={md} className="flex items-center gap-1.5">
+            <input type="radio" checked={mode === md} onChange={() => onChange(md, [])} />
+            {md === 'twoOne' ? O.twoOne : O.threeOnes}
           </label>
         ))}
       </div>
@@ -392,7 +398,7 @@ export function BonusFields({
         {slots.map((l, i) => (
           <Select
             key={i}
-            label={`Aumento ${i + 1} (${l})`}
+            label={O.increase(i + 1, l)}
             value={picks[i] ?? ''}
             className="w-auto"
             onValue={(v) => {
@@ -415,10 +421,10 @@ export function BonusFields({
 
 /** Selettore dell'allineamento dalla lista standard (più un eventuale valore personalizzato già salvato). */
 export function AlignmentSelect({ value, onValue }: { value: string; onValue: (v: string) => void }) {
-  const known = (ALIGNMENTS as readonly string[]).includes(value);
+  const known = ALIGNMENTS.includes(value);
   return (
     <Select
-      label="Allineamento"
+      label={O.alignment}
       value={value}
       onValue={onValue}
       options={[

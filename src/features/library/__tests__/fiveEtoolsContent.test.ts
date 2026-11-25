@@ -184,7 +184,13 @@ describe('convertitori 5etools', () => {
       duration: [{ type: 'instant' }],
       entries: ['Zap.'],
     };
-    const asObject = { TST: { 'Test Bolt': { class: { XPHB: { Sorcerer: true, Wizard: true } } } } };
+    const asObject = {
+      TST: {
+        'Test Bolt': {
+          class: { XPHB: { Sorcerer: true, Wizard: true }, WoW: { Mage: { definedInSources: ['WoW'] } } },
+        },
+      },
+    };
     const asArray = { tst: { 'test bolt': { class: [{ name: 'Sorcerer', source: 'XPHB' }] } } };
     expect(isFiveEtoolsContent(asObject)).toBe(true);
     expect(convertFiveEtoolsFiles([{ spell: [bolt] }, asObject]).spells[0]!.classes).toEqual([

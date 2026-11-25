@@ -5,6 +5,7 @@ import { useCharacter } from '@/hooks/useActiveCharacter';
 import { useUiStore } from '@/stores/uiStore';
 import { Placeholder } from '@/ui/Placeholder';
 import type { CharacterOutletContext } from './useCurrentCharacter';
+import { m } from '@/i18n';
 
 /**
  * Rotta /pg/:charId — carica il personaggio dall'URL, lo rende "attivo"
@@ -24,11 +25,11 @@ export function CharacterRoute() {
     return (
       <Placeholder
         icon={UserX}
-        title="Personaggio non trovato"
-        description="Forse è stato eliminato, oppure il link non è più valido."
+        title={m.app.characterMissing.title}
+        description={m.app.characterMissing.description}
       >
         <Link to="/benvenuto" className="text-sm font-medium text-accent underline-offset-4 hover:underline">
-          Torna all'inizio
+          {m.app.notFound.back}
         </Link>
       </Placeholder>
     );

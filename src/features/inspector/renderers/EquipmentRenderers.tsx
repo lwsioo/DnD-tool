@@ -8,6 +8,7 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { formatCost, formatRange, formatWeight, type Units } from '@/lib/units';
 import { InspectorChip } from '@/ui/InspectorChip';
 import { Article, NotFound, StatList } from './Article';
+import { m } from '@/i18n';
 
 /** Etichette di proprietà cliccabili, con la gittata per Lancio/Gittata: "Lancio (6/18 m)". */
 export function PropertyChips({ properties, units }: { properties: WeaponPropertyRef[]; units: Units }) {
@@ -29,7 +30,7 @@ export function MasteryChip({ mastery, unlocked = true }: { mastery: MasteryKey;
     <InspectorChip
       to={{ kind: 'mastery', key: mastery }}
       muted={!unlocked}
-      title={unlocked ? undefined : 'Maestria non sbloccata per questo personaggio'}
+      title={unlocked ? undefined : m.inspector.masteryLocked}
     >
       {WEAPON_MASTERIES[mastery].name}
     </InspectorChip>
@@ -39,18 +40,18 @@ export function MasteryChip({ mastery, unlocked = true }: { mastery: MasteryKey;
 export function WeaponBaseRenderer({ id }: { id: string }) {
   const { units } = useAppSettings();
   const w = WEAPONS_BY_ID.get(id);
-  if (!w) return <NotFound what="Arma" />;
-  const kind = `Arma ${w.category === 'simple' ? 'semplice' : 'da guerra'} ${w.type === 'melee' ? 'da mischia' : 'a distanza'}`;
+  if (!w) return <NotFound what={m.inspector.weapon} />;
+  const kind = m.inspector.weaponKind(w.category === 'simple', w.type === 'melee');
   return (
-    <Article title={w.name} subtitle={`${kind} · ${w.nameEn}`}>
+    <Article title={w.name} subtitle={m.inspector.kindLine(kind, w.name, w.nameEn)}>
       <StatList
         rows={[
-          ['Danni', damageText(w)],
-          ['Proprietà', <PropertyChips properties={w.properties} units={units} />],
-          ['Maestria', <MasteryChip mastery={w.mastery} />],
-          !!w.ammunition && ['Munizione', w.ammunition],
-          ['Peso', formatWeight(w.weightLb, units)],
-          ['Costo', formatCost(w.costCp)],
+          [m.inspector.damage, damageText(w)],
+          [m.inspector.properties, <PropertyChips properties={w.properties} units={units} />],
+          [m.inspector.mastery, <MasteryChip mastery={w.mastery} />],
+          !!w.ammunition && [m.inspector.ammunition, w.ammunition],
+          [m.inspector.weight, formatWeight(w.weightLb, units)],
+          [m.inspector.cost, formatCost(w.costCp)],
         ]}
       />
     </Article>
@@ -60,24 +61,24 @@ export function WeaponBaseRenderer({ id }: { id: string }) {
 export function ArmorBaseRenderer({ id }: { id: string }) {
   const { units } = useAppSettings();
   const a = ARMOR_BY_ID.get(id);
-  if (!a) return <NotFound what="Armatura" />;
+  if (!a) return <NotFound what={m.inspector.armor} />;
   return (
-    <Article title={a.name} subtitle={`${ARMOR_CATEGORY_LABELS[a.category]} · ${a.nameEn}`}>
+    <Article title={a.name} subtitle={m.inspector.kindLine(ARMOR_CATEGORY_LABELS[a.category], a.name, a.nameEn)}>
       <StatList
         rows={[
-          ['Classe Armatura', armorAcText(a)],
-          !!a.strRequirement && ['Forza', `${a.strRequirement} (altrimenti −3 m di velocità)`],
-          ['Furtività', a.stealthDisadvantage ? 'Svantaggio' : '—'],
-          ['Peso', formatWeight(a.weightLb, units)],
-          ['Costo', formatCost(a.costCp)],
-          ['Indossare', a.don],
-          ['Togliere', a.doff],
+          [m.inspector.armorClass, armorAcText(a)],
+          !!a.strRequirement && [m.inspector.strength, m.inspector.strengthReq(a.strRequirement)],
+          [m.inspector.stealth, a.stealthDisadvantage ? m.inspector.disadvantage : '—'],
+          [m.inspector.weight, formatWeight(a.weightLb, units)],
+          [m.inspector.cost, formatCost(a.costCp)],
+          [m.inspector.don, a.don],
+          [m.inspector.doff, a.doff],
         ]}
       />
       <p className="text-xs text-muted">
         {a.category === 'shield'
-          ? 'Il bonus alla CA dello scudo vale solo se hai l’addestramento con gli scudi.'
-          : 'Senza addestramento in questa categoria hai svantaggio ai tiri d20 basati su Forza o Destrezza e non puoi lanciare incantesimi.'}
+          ? m.inspector.shieldNote
+          : m.inspector.armorNote}
       </p>
     </Article>
   );

@@ -3,16 +3,17 @@ import { useLocation } from 'react-router';
 import { IconButton } from '@/ui/IconButton';
 import { useUiStore } from '@/stores/uiStore';
 import { SaveIndicator } from './SaveIndicator';
+import { m } from '@/i18n';
 
 const SECTION_TITLES: Array<[RegExp, string]> = [
-  [/^\/benvenuto/, 'Benvenuto'],
-  [/^\/nuovo/, 'Nuovo personaggio'],
-  [/^\/pg\/[^/]+\/scheda/, 'Scheda'],
-  [/^\/pg\/[^/]+\/grimorio/, 'Grimorio'],
-  [/^\/pg\/[^/]+\/inventario/, 'Inventario'],
-  [/^\/campagna/, 'Campagna Wiki'],
-  [/^\/compendio/, 'Compendio'],
-  [/^\/impostazioni/, 'Impostazioni'],
+  [/^\/benvenuto/, m.app.nav.welcome],
+  [/^\/nuovo/, m.app.nav.newCharacter],
+  [/^\/pg\/[^/]+\/scheda/, m.app.nav.sheet],
+  [/^\/pg\/[^/]+\/grimorio/, m.app.nav.grimoire],
+  [/^\/pg\/[^/]+\/inventario/, m.app.nav.inventory],
+  [/^\/campagna/, m.app.nav.wiki],
+  [/^\/compendio/, m.app.nav.compendium],
+  [/^\/impostazioni/, m.app.nav.settings],
 ];
 
 export function TopBar() {
@@ -25,7 +26,7 @@ export function TopBar() {
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-panel px-3 lg:px-5">
       <IconButton
         icon={Menu}
-        label="Apri il menu"
+        label={m.app.topbar.openMenu}
         className="lg:hidden"
         onClick={() => useUiStore.getState().setSidebarOpen(true)}
       />
@@ -40,17 +41,17 @@ export function TopBar() {
           type="button"
           data-tour="search"
           onClick={() => useUiStore.getState().setPaletteOpen(true)}
-          title="Ricerca globale (Ctrl+K)"
+          title={m.app.topbar.searchTitle}
           className="flex h-8 items-center gap-2 rounded-md border border-line bg-panel-2 px-2.5 text-xs text-muted transition-colors hover:border-accent/50 hover:text-ink"
         >
           <Search className="size-3.5" aria-hidden />
-          <span className="hidden md:inline">Cerca…</span>
+          <span className="hidden md:inline">{m.app.topbar.search}</span>
           <kbd className="rounded border border-line px-1 font-sans text-[10px]">Ctrl K</kbd>
         </button>
 
         <IconButton
           icon={PanelRight}
-          label={inspectorOpen ? 'Chiudi pannello dettagli' : 'Apri pannello dettagli'}
+          label={inspectorOpen ? m.app.topbar.closeInspector : m.app.topbar.openInspector}
           data-tour="inspector"
           active={inspectorOpen}
           onClick={toggleInspector}

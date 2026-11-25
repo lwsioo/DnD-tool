@@ -4,6 +4,7 @@ import type { InventoryItem } from '@/domain/items';
 import type { ProfLevel } from '@/domain/abilities';
 import { evaluateOr, type FormulaVars } from './formula';
 import type { ActiveEffect, DeriveContext, Part, RollModeInfo } from './types';
+import { m } from '@/i18n';
 
 export interface EquipmentState {
   armor?: InventoryItem;
@@ -76,7 +77,7 @@ export function collectEffects(c: Character, eq: EquipmentState, ctx: DeriveCont
   }
   // Armatura senza addestramento: svantaggio ai tiri d20 basati su FOR e DES (e niente incantesimi).
   if (eq.armor && !eq.armorTrained) {
-    const source = `${eq.armor.name} (senza addestramento)`;
+    const source = m.engine.untrainedSource(eq.armor.name);
     for (const t of ['check.str', 'check.dex', 'save.str', 'save.dex', 'attack.all'] as const) {
       out.push(implicit('untrained', t, 'disadvantage', source));
     }
@@ -84,8 +85,8 @@ export function collectEffects(c: Character, eq: EquipmentState, ctx: DeriveCont
   // Indebolimento (2024): −2 per livello ai tiri d20, −5 ft per livello alla velocità.
   const ex = c.combat.exhaustion;
   if (ex > 0) {
-    out.push(implicit('exhaustion', 'd20.all', 'add', `Indebolimento ${ex}`, String(-2 * ex)));
-    out.push(implicit('exhaustion', 'speed', 'add', `Indebolimento ${ex}`, String(-5 * ex)));
+    out.push(implicit('exhaustion', 'd20.all', 'add', m.engine.exhaustion(ex), String(-2 * ex)));
+    out.push(implicit('exhaustion', 'speed', 'add', m.engine.exhaustion(ex), String(-5 * ex)));
   }
 
   return out.filter((e) => requirementsMet(e.requires, eq));

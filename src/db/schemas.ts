@@ -6,6 +6,7 @@ import type { EffectTarget } from '@/domain/effects';
 import type { LibraryItem, SettingRecord } from '@/domain/library';
 import type { Spell } from '@/domain/spells';
 import type { Campaign, WikiEntry } from '@/domain/wiki';
+import { m as msg } from '@/i18n';
 
 /**
  * Schemi di validazione per i file importati. Sono volutamente "tolleranti":
@@ -64,7 +65,7 @@ const EFFECT_TARGETS = new Set<string>([
 export const effectSchema = z.object({
   id,
   target: z.custom<EffectTarget>((v) => typeof v === 'string' && EFFECT_TARGETS.has(v), {
-    message: 'Bersaglio dell’effetto non valido',
+    message: msg.misc.db.badTarget,
   }),
   op: z.enum(['add', 'set', 'formula', 'advantage', 'disadvantage', 'proficiency', 'expertise']),
   value: z.string().optional(),

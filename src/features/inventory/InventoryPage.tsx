@@ -14,14 +14,12 @@ import { CurrencyPanel } from './CurrencyPanel';
 import { MAX_ATTUNED } from './itemActions';
 import { ItemForm } from './ItemForm';
 import { ItemTree } from './ItemTree';
+import { m } from '@/i18n';
 
 const STATUS_LABELS = {
   ok: null,
-  encumbered: 'Ingombrato: velocità −3 m',
-  heavilyEncumbered:
-    'Pesantemente ingombrato: velocità −6 m e svantaggio a prove, attacchi e TS di FOR, DES, COS',
-  over: 'Oltre la capacità di carico',
-} as const;
+  ...m.inventory.encumbrance,
+};
 
 /** Inventario: monete, oggetti ad albero con contenitori, equipaggiamento collegato a CA e attacchi. */
 export function InventoryPage() {
@@ -56,24 +54,24 @@ export function InventoryPage() {
         <AttacksTable />
       </SheetContext.Provider>
 
-      <section aria-label="Oggetti" className="space-y-3 rounded-xl border border-line bg-panel p-4">
+      <section aria-label={m.inventory.items} className="space-y-3 rounded-xl border border-line bg-panel p-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="flex-1 text-[11px] font-semibold tracking-wider text-muted uppercase">Oggetti</h2>
+          <h2 className="flex-1 text-[11px] font-semibold tracking-wider text-muted uppercase">{m.inventory.items}</h2>
           <span
             className={cn(
               'flex items-center gap-1.5 text-xs',
               enc.status === 'ok' ? 'text-muted' : 'text-danger',
             )}
-            title={`Capacità di carico: ${formatWeight(enc.capacityLb, units)} (FOR × 15)`}
+            title={m.inventory.capacity(formatWeight(enc.capacityLb, units))}
           >
             <Scale className="size-3.5" aria-hidden />
             {formatWeight(enc.weightLb, units)} / {formatWeight(enc.capacityLb, units)}
           </span>
           <span className={cn('text-xs', attuned > MAX_ATTUNED ? 'text-danger' : 'text-muted')}>
-            Sintonia {attuned}/{MAX_ATTUNED}
+            {m.inventory.attunement(attuned, MAX_ATTUNED)}
           </span>
           <Button size="sm" variant="primary" icon={Plus} onClick={() => setEditing('new')}>
-            Aggiungi oggetto
+            {m.inventory.addItem}
           </Button>
         </div>
         {showStatus && STATUS_LABELS[enc.status] && (

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useUiStore } from '@/stores/uiStore';
 import { entryPath } from '../categories';
 import { useWikiLinks } from './WikiLinkContext';
+import { m } from '@/i18n';
 
 /**
  * Un [[collegamento]] reso nel testo. Clic: anteprima nell'Inspector; Ctrl/⌘+clic: apre la voce.
@@ -21,7 +22,7 @@ export function WikiLinkView({ target, children }: { target: string; children: R
         type="button"
         disabled={!canCreate}
         title={
-          canCreate ? `“${target}” non esiste ancora: clic per creare la voce` : `“${target}” non trovato`
+          canCreate ? m.wiki.linkMissingCreate(target) : m.wiki.linkMissing(target)
         }
         onClick={() => ctx?.requestCreate(target)}
         className="cursor-pointer text-danger underline decoration-danger/60 decoration-dashed underline-offset-2 disabled:cursor-default"

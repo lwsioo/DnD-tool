@@ -14,7 +14,13 @@ import {
 import { bonusFromPicks } from '@/features/origins/bonus';
 import { addClass } from '@/features/sheet/classActions';
 import { itemFromSrd } from '@/features/inventory/srdItems';
+import { itemsFromEquipmentOption } from '@/features/inventory/classEquipment';
+import { CLASS_EQUIPMENT, type ClassEquipmentOption } from '@/data/srd/classEquipment';
 import { rollDie } from '@/lib/dice';
+import { newId } from '@/lib/id';
+import { m } from '@/i18n';
+
+const W = m.onboarding.wizard;
 
 /** Libreria delle origini integrata (senza contenuti importati). */
 export const SRD_ORIGIN_LIBRARY: OriginLibrary = {
@@ -78,6 +84,8 @@ export interface WizardDraft {
   languages: string[];
   tools: string[];
   masteries: string[];
+  /** Equipaggiamento iniziale della classe (opzione del manuale) o 'none' per sceglierlo a mano. */
+  classEquipment: 'A' | 'B' | 'C' | 'none';
   armorId: string;
   shield: boolean;
   weaponIds: string[];
@@ -109,9 +117,10 @@ export function initialDraft(): WizardDraft {
     bonusMode: 'twoOne',
     bonusAbilities: [],
     skills: [],
-    languages: ['Comune'],
+    languages: [W.defaultLanguage],
     tools: [],
     masteries: [],
+    classEquipment: 'none',
     armorId: '',
     shield: false,
     weaponIds: [],
@@ -147,6 +156,44 @@ export function remainingPool(pool: readonly number[], scores: Record<Ability, n
   return left;
 }
 
+/** Serie consigliata dal manuale per una classe SRD, come punteggi per caratteristica. */
+export function recommendedArray(classKey: string): Record<Ability, number> | null {
+  const cl = CLASSES_BY_KEY.get(classKey);
+  if (!cl) return null;
+  return Object.fromEntries(ABILITIES.map((a, i) => [a, cl.recommended[i]!])) as Record<Ability, number>;
+}
+
+/**
+ * Punteggi consigliati per il metodo scelto: con serie standard, point buy (costa esattamente 27) e manuale
+ * sono quelli del manuale; con i tiri 4d6 i valori tirati vengono distribuiti nello stesso ordine di importanza.
+ */
+export function recommendedScores(
+  d: Pick<WizardDraft, 'classKey' | 'method' | 'rolled'>,
+): Record<Ability, number> | null {
+  const rec = recommendedArray(d.classKey);
+  if (!rec) return null;
+  if (d.method !== 'roll') return rec;
+  if (d.rolled.length !== 6) return null;
+  const rolled = [...d.rolled].sort((a, b) => b - a);
+  const byImportance = [...ABILITIES].sort((a, b) => rec[b] - rec[a]);
+  return Object.fromEntries(byImportance.map((a, i) => [a, rolled[i]!])) as Record<Ability, number>;
+}
+
+/** Aumenti suggeriti: tra le caratteristiche consentite, +2 alla più importante per la classe e +1 alla seconda. */
+export function suggestedBonus(classKey: string, allowed: readonly Ability[] = ABILITIES): Ability[] {
+  const rec = recommendedArray(classKey);
+  if (!rec) return [];
+  return [...allowed].sort((a, b) => rec[b] - rec[a]).slice(0, 2);
+}
+
+/** Opzione d'equipaggiamento di classe scelta, se la classe è SRD e non si sceglie a mano. */
+export function classEquipmentOption(
+  d: Pick<WizardDraft, 'classKey' | 'classEquipment'>,
+): ClassEquipmentOption | undefined {
+  if (d.classEquipment === 'none') return undefined;
+  return CLASS_EQUIPMENT[d.classKey]?.find((o) => o.key === d.classEquipment);
+}
+
 /** Bonus del background per caratteristica. */
 export function backgroundBonus(
   d: Pick<WizardDraft, 'bonusMode' | 'bonusAbilities'>,
@@ -173,21 +220,21 @@ export function checkAbilities(d: WizardDraft): AbilityCheck {
   if (d.method === 'pointbuy') {
     const spent = pointBuySpent(d.scores);
     if (!Number.isFinite(spent))
-      return { ok: false, message: 'Con il point buy i punteggi vanno da 8 a 15.' };
+      return { ok: false, message: W.check.pointBuyRange };
     if (spent > POINT_BUY_BUDGET)
-      return { ok: false, message: `Hai speso ${spent} punti su ${POINT_BUY_BUDGET}.` };
+      return { ok: false, message: W.check.pointBuySpent(spent, POINT_BUY_BUDGET) };
     return { ok: true };
   }
   if (d.method === 'manual') {
     return values.every((v) => v >= 3 && v <= 18)
       ? { ok: true }
-      : { ok: false, message: 'I punteggi vanno da 3 a 18.' };
+      : { ok: false, message: W.check.manualRange };
   }
   const pool = d.method === 'standard' ? STANDARD_ARRAY : d.rolled;
-  if (d.method === 'roll' && pool.length !== 6) return { ok: false, message: 'Tira prima i sei valori.' };
-  if (values.some((v) => !v)) return { ok: false, message: 'Assegna un valore a ogni caratteristica.' };
+  if (d.method === 'roll' && pool.length !== 6) return { ok: false, message: W.check.rollFirst };
+  if (values.some((v) => !v)) return { ok: false, message: W.check.assignAll };
   if (remainingPool(pool, d.scores).length !== 0)
-    return { ok: false, message: 'Ogni valore va usato una sola volta.' };
+    return { ok: false, message: W.check.useOnce };
   return { ok: true };
 }
 
@@ -197,7 +244,7 @@ export function buildCharacterFromWizard(
   now = Date.now(),
   lib: OriginLibrary = SRD_ORIGIN_LIBRARY,
 ): Character {
-  const base = createBlankCharacter(d.name.trim() || 'Nuovo personaggio', now);
+  const base = createBlankCharacter(d.name.trim() || W.defaultName, now);
   const srd = d.classKey ? CLASSES_BY_KEY.get(d.classKey) : undefined;
   const speciesDef = lib.species.find((s) => s.id === d.speciesId);
   const backgroundDef = lib.backgrounds.find((b) => b.id === d.backgroundId);
@@ -222,7 +269,7 @@ export function buildCharacterFromWizard(
     }
     if (!srd && d.spellAbility && !c.spellcasting.sources.length && d.customClassName.trim()) {
       c.spellcasting.sources.push({
-        id: crypto.randomUUID(),
+        id: newId(),
         label: d.customClassName.trim(),
         ability: d.spellAbility,
       });
@@ -251,9 +298,16 @@ export function buildCharacterFromWizard(
     c.proficiencies.tools = [...new Set([...c.proficiencies.tools, ...d.tools])];
     c.weaponMasteries = [...new Set(d.masteries)];
 
-    if (d.armorId) c.inventory.items.push({ ...itemFromSrd(`armor:${d.armorId}`), equipped: true });
-    if (d.shield) c.inventory.items.push({ ...itemFromSrd('armor:shield'), equipped: true });
-    for (const w of d.weaponIds) c.inventory.items.push({ ...itemFromSrd(`weapon:${w}`), equipped: true });
+    const classOption = classEquipmentOption(d);
+    if (classOption) {
+      c.inventory.items.push(...itemsFromEquipmentOption(classOption));
+      c.inventory.currency.gp += classOption.gold;
+    } else {
+      // Scelta a mano: armatura, scudo e armi dalle tabelle SRD.
+      if (d.armorId) c.inventory.items.push({ ...itemFromSrd(`armor:${d.armorId}`), equipped: true });
+      if (d.shield) c.inventory.items.push({ ...itemFromSrd('armor:shield'), equipped: true });
+      for (const w of d.weaponIds) c.inventory.items.push({ ...itemFromSrd(`weapon:${w}`), equipped: true });
+    }
     c.inventory.currency.gp += Math.max(0, Math.floor(d.gold));
   });
 }

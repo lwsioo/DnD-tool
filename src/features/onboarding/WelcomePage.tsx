@@ -9,6 +9,9 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { trackSave } from '@/stores/saveStatus';
 import { toast } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore';
+import { LOCALE, LOCALES, m, setLocale } from '@/i18n';
+
+const T = m.onboarding.welcome;
 
 interface StartOption {
   icon: LucideIcon;
@@ -35,7 +38,7 @@ export function WelcomePage() {
       setActiveCharacter(id);
       navigate(`/pg/${id}/scheda`);
     } catch (e) {
-      toast({ tone: 'error', message: `Operazione non riuscita: ${e instanceof Error ? e.message : e}` });
+      toast({ tone: 'error', message: T.failed(e instanceof Error ? e.message : String(e)) });
     } finally {
       setBusy(false);
     }
@@ -44,22 +47,20 @@ export function WelcomePage() {
   const options: StartOption[] = [
     {
       icon: UserPlus,
-      title: 'Crea nuovo personaggio',
-      description: 'Creazione guidata in pochi passi: classe, caratteristiche, competenze, equipaggiamento.',
+      title: T.createTitle,
+      description: T.createDesc,
       onSelect: () => navigate('/nuovo'),
     },
     {
       icon: FileJson,
-      title: 'Importa da JSON',
-      description: 'Carica un personaggio esportato o un backup completo dell’archivio.',
+      title: T.importTitle,
+      description: T.importDesc,
       onSelect: () => setImportOpen(true),
     },
     {
       icon: FlaskConical,
-      title: example ? 'Apri l’esempio' : 'Carica esempio',
-      description: example
-        ? 'Il personaggio dimostrativo è già caricato: aprilo. Si rimuove dalle Impostazioni.'
-        : 'Una Paladina di 3° livello e una mini-campagna per provare subito l’interfaccia.',
+      title: example ? T.openExample : T.loadExample,
+      description: example ? T.exampleLoaded : T.exampleDesc,
       onSelect: () => void start(loadExample),
     },
   ];
@@ -67,11 +68,8 @@ export function WelcomePage() {
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col justify-center gap-8 p-8">
       <div className="space-y-2 text-center">
-        <h2 className="font-display text-3xl tracking-wide">Benvenuto, avventuriero</h2>
-        <p className="text-muted">
-          Scheda, grimorio, inventario e appunti di campagna in un’unica app. Tutto resta salvato su questo
-          dispositivo, anche offline.
-        </p>
+        <h2 className="font-display text-3xl tracking-wide">{T.title}</h2>
+        <p className="text-muted">{T.intro}</p>
       </div>
 
       <div data-tour="start" className="grid gap-3 sm:grid-cols-3">
@@ -93,7 +91,7 @@ export function WelcomePage() {
       </div>
 
       <p className="text-center text-sm text-muted">
-        Preferisci compilare tutto a mano?{' '}
+        {T.preferManual}{' '}
         <button
           type="button"
           disabled={busy}
@@ -104,9 +102,28 @@ export function WelcomePage() {
             void start(async () => (await charactersRepo.create()).id);
           }}
         >
-          Inizia da una scheda vuota
+          {T.blank}
         </button>
       </p>
+
+      <div role="radiogroup" aria-label={T.language} className="flex justify-center gap-1 text-xs">
+        {LOCALES.map((l) => (
+          <button
+            key={l.id}
+            type="button"
+            role="radio"
+            aria-checked={LOCALE === l.id}
+            onClick={() => LOCALE !== l.id && setLocale(l.id)}
+            className={
+              LOCALE === l.id
+                ? 'rounded-full border border-accent px-2.5 py-0.5 text-accent'
+                : 'rounded-full border border-line px-2.5 py-0.5 text-muted hover:text-ink'
+            }
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
 
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </div>

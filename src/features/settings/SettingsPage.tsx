@@ -5,6 +5,7 @@ import {
   FileUp,
   HardDrive,
   History,
+  Languages,
   Library,
   Palette,
   Ruler,
@@ -23,6 +24,7 @@ import { exportFullBackupToFile, exportLibraryPackToFile } from '@/features/back
 import { ImportContentDialog } from '@/features/library/ImportContentDialog';
 import { ImportDialog } from '@/features/backup/ImportDialog';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { LANG_TAG, LOCALE, LOCALES, m, setLocale } from '@/i18n';
 import { cn } from '@/lib/cn';
 import { toast } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -33,7 +35,42 @@ import { Select } from '@/ui/fields';
 import { Button } from '@/ui/Button';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 
-const dateTime = new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
+const T = m.settings;
+const dateTime = new Intl.DateTimeFormat(LANG_TAG, { dateStyle: 'medium', timeStyle: 'short' });
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/** Gruppo di pulsanti a scelta singola (unità, tema, lingua). */
+function Choice<V extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: V;
+  options: ReadonlyArray<readonly [V, string]>;
+  onChange: (v: V) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={label}>
+      {options.map(([v, text]) => (
+        <button
+          key={v}
+          type="button"
+          role="radio"
+          aria-checked={value === v}
+          onClick={() => onChange(v)}
+          className={cn(
+            'rounded-md border px-3 py-1.5 text-sm',
+            value === v ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted',
+          )}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function SettingsPage() {
   const settings = useAppSettings();
@@ -52,39 +89,33 @@ export function SettingsPage() {
   const exportBackup = async () => {
     try {
       const name = await exportFullBackupToFile();
-      toast({ tone: 'success', message: `Backup scaricato: ${name}` });
+      toast({ tone: 'success', message: T.backupDownloaded(name) });
     } catch (e) {
-      toast({ tone: 'error', message: `Export non riuscito: ${e instanceof Error ? e.message : e}` });
+      toast({ tone: 'error', message: m.common.exportFailed(errorText(e)) });
     }
   };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
-      <Section icon={Download} title="Backup e trasferimento">
-        <p className="text-muted">
-          I dati restano solo in questo browser. Esporta un backup completo ogni tanto, o per spostarli su un
-          altro dispositivo.
-        </p>
+      <Section icon={Download} title={T.backup.title}>
+        <p className="text-muted">{T.backup.intro}</p>
         <p className="text-xs text-muted">
-          Ultimo backup completo: {settings.lastBackupAt ? dateTime.format(settings.lastBackupAt) : 'mai'}
+          {T.backup.last(settings.lastBackupAt ? dateTime.format(settings.lastBackupAt) : T.backup.never)}
         </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" icon={Download} onClick={() => void exportBackup()}>
-            Esporta backup completo
+            {T.backup.export}
           </Button>
           <Button icon={FileUp} onClick={() => setImportOpen(true)}>
-            Importa file…
+            {T.backup.import}
           </Button>
         </div>
         {preReplace && (
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-bg/40 p-3">
             <History className="size-4 text-accent" aria-hidden />
-            <span className="flex-1 text-xs">
-              Copia dell’archivio salvata prima dell’ultima sostituzione (
-              {dateTime.format(preReplace.savedAt)}).
-            </span>
+            <span className="flex-1 text-xs">{T.backup.preReplace(dateTime.format(preReplace.savedAt))}</span>
             <Button size="sm" onClick={() => setConfirm('restore')}>
-              Ripristina
+              {T.backup.restore}
             </Button>
           </div>
         )}
@@ -92,95 +123,75 @@ export function SettingsPage() {
 
       <ContentSection />
 
-      <Section icon={Ruler} title="Unità di misura">
-        <div className="flex gap-2" role="radiogroup" aria-label="Unità di misura">
-          {(
-            [
-              ['metric', 'Metri e kg (manuali italiani)'],
-              ['imperial', 'Piedi e libbre'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={settings.units === value}
-              onClick={() => void settingsRepo.set('units', value)}
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-sm',
-                settings.units === value
-                  ? 'border-accent bg-accent-soft text-accent'
-                  : 'border-line text-muted',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <Section icon={Languages} title={T.language.title}>
+        <p className="text-muted">{T.language.intro}</p>
+        <Choice
+          label={T.language.title}
+          value={LOCALE}
+          options={LOCALES.map((l) => [l.id, l.label] as const)}
+          onChange={setLocale}
+        />
+        <p className="text-xs text-muted">{T.language.note}</p>
       </Section>
 
-      <Section icon={Palette} title="Aspetto">
-        <div className="flex gap-2" role="radiogroup" aria-label="Tema">
-          {(
-            [
-              ['dark', 'Scuro'],
-              ['light', 'Chiaro'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={theme === value}
-              onClick={() => useUiStore.getState().setTheme(value)}
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-sm',
-                theme === value ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <Section icon={Ruler} title={T.units.title}>
+        <Choice
+          label={T.units.title}
+          value={settings.units}
+          options={[
+            ['metric', T.units.metric],
+            ['imperial', T.units.imperial],
+          ]}
+          onChange={(v) => void settingsRepo.set('units', v)}
+        />
+      </Section>
+
+      <Section icon={Palette} title={T.appearance.title}>
+        <Choice
+          label={T.appearance.theme}
+          value={theme}
+          options={[
+            ['dark', T.appearance.dark],
+            ['light', T.appearance.light],
+          ]}
+          onChange={(v) => useUiStore.getState().setTheme(v)}
+        />
         <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
-          <span className="flex-1 text-muted">
-            La visita guidata mostra a cosa serve ogni parte dell’app.
-          </span>
+          <span className="flex-1 text-muted">{T.appearance.tourHint}</span>
           <Button icon={Compass} onClick={() => useUiStore.getState().setTourOpen(true)}>
-            Rivedi la visita guidata
+            {T.appearance.tour}
           </Button>
         </div>
       </Section>
 
       {active && <CharacterRules character={active} />}
-      <Section icon={HardDrive} title="Archivio del browser">
+      <Section icon={HardDrive} title={T.storage.title}>
         <p className="text-muted">
           {persistence === 'persisted'
-            ? 'Archivio persistente: il browser non lo cancellerà per liberare spazio.'
+            ? T.storage.persisted
             : persistence === 'unsupported'
-              ? 'Questo browser non permette di rendere persistente l’archivio: fai backup regolari.'
-              : 'Archivio non ancora persistente: in caso di poco spazio il browser potrebbe cancellarlo.'}
+              ? T.storage.unsupported
+              : T.storage.bestEffort}
         </p>
         {persistence === 'best-effort' && (
           <Button
             onClick={() =>
               void requestPersistence().then((s) => {
                 setPersistence(s);
-                if (s !== 'persisted')
-                  toast({ message: 'Il browser non ha concesso la persistenza: fai backup regolari.' });
+                if (s !== 'persisted') toast({ message: T.storage.denied });
               })
             }
           >
-            Rendi persistente
+            {T.storage.persist}
           </Button>
         )}
       </Section>
 
       {settings.example && (
-        <Section icon={Trash2} title="Dati di esempio">
-          <p className="text-muted">Il personaggio e la campagna dimostrativi sono ancora nell’archivio.</p>
+        <Section icon={Trash2} title={T.example.title}>
+          <p className="text-muted">{T.example.intro}</p>
           <Button variant="danger" icon={Trash2} onClick={() => setConfirm('example')}>
-            Rimuovi dati di esempio
+            {T.example.remove}
           </Button>
         </Section>
       )}
@@ -190,33 +201,31 @@ export function SettingsPage() {
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
       <ConfirmDialog
         open={confirm === 'restore'}
-        title="Ripristinare l’archivio precedente?"
-        confirmLabel="Ripristina"
+        title={T.backup.restoreTitle}
+        confirmLabel={T.backup.restore}
         onCancel={() => setConfirm(null)}
         onConfirm={() => {
           setConfirm(null);
           void restorePreReplaceBackup().then(() => {
-            toast({ tone: 'success', message: 'Archivio ripristinato.' });
+            toast({ tone: 'success', message: T.backup.restored });
             navigate('/');
           });
         }}
       >
-        L’archivio torna com’era prima dell’ultima sostituzione. Lo stato attuale viene a sua volta salvato,
-        così puoi cambiare idea.
+        {T.backup.restoreBody}
       </ConfirmDialog>
       <ConfirmDialog
         open={confirm === 'example'}
-        title="Rimuovere i dati di esempio?"
-        confirmLabel="Rimuovi"
+        title={T.example.confirmTitle}
+        confirmLabel={T.example.confirm}
         danger
         onCancel={() => setConfirm(null)}
         onConfirm={() => {
           setConfirm(null);
-          void removeExample().then(() => toast({ tone: 'success', message: 'Dati di esempio rimossi.' }));
+          void removeExample().then(() => toast({ tone: 'success', message: T.example.removed }));
         }}
       >
-        Vengono eliminati il personaggio Lyra Solmonte, la campagna “La Costa Spezzata” con le sue voci e gli
-        incantesimi di esempio non usati da altri personaggi. L’operazione non si può annullare.
+        {T.example.body}
       </ConfirmDialog>
     </div>
   );
@@ -260,42 +269,25 @@ function ContentSection() {
   const exportPack = async () => {
     try {
       const name = await exportLibraryPackToFile();
-      toast({ tone: 'success', message: `Pacchetto scaricato: ${name}` });
+      toast({ tone: 'success', message: T.packDownloaded(name) });
     } catch (e) {
-      toast({ tone: 'error', message: `Export non riuscito: ${e instanceof Error ? e.message : e}` });
+      toast({ tone: 'error', message: m.common.exportFailed(errorText(e)) });
     }
   };
 
-  const summary = counts
-    ? [
-        `${counts.spells} incantesimi`,
-        `${counts.species} specie`,
-        `${counts.background} background`,
-        `${counts.feat} talenti`,
-        `${counts.item} oggetti`,
-      ].join(' · ')
-    : '…';
-
   return (
-    <Section icon={Library} title="Contenuti">
-      <p className="text-muted">
-        Importa in una volta sola più file di 5etools (incantesimi, specie, background, talenti, oggetti) o un
-        pacchetto di Codex. Per dare a qualcuno tutti i tuoi contenuti pronti, esporta il pacchetto: chi lo
-        importa li ritrova nel wizard, nella scheda, nel grimorio e nell’inventario. Specie, background e
-        talenti SRD sono già inclusi nell’app.
-      </p>
-      <p className="text-xs text-muted">In libreria: {summary} (oltre ai contenuti SRD integrati).</p>
+    <Section icon={Library} title={T.content.title}>
+      <p className="text-muted">{T.content.intro}</p>
+      <p className="text-xs text-muted">{T.content.inLibrary(counts ? T.content.counts(counts) : '…')}</p>
       <div className="flex flex-wrap gap-2">
         <Button variant="primary" icon={FileUp} onClick={() => setOpen(true)}>
-          Importa contenuti…
+          {T.content.import}
         </Button>
         <Button icon={Download} onClick={() => void exportPack()}>
-          Esporta pacchetto contenuti
+          {T.content.export}
         </Button>
       </div>
-      <p className="text-xs text-muted">
-        Condividi solo materiale SRD, tuo, o di manuali che anche gli altri possiedono.
-      </p>
+      <p className="text-xs text-muted">{T.content.shareNote}</p>
       {open && <ImportContentDialog onClose={() => setOpen(false)} />}
     </Section>
   );
@@ -306,19 +298,20 @@ function CharacterRules({ character }: { character: Character }) {
   const update = (recipe: (s: Character['settings']) => void) =>
     void charactersRepo.mutate(character.id, (d) => recipe(d.settings));
   const s = character.settings;
+  const R = T.rules;
   return (
-    <Section icon={Scale} title={`Regole di ${character.identity.name || 'questo personaggio'}`}>
+    <Section icon={Scale} title={R.title(character.identity.name)}>
       <label className="flex items-center justify-between gap-3">
-        <span>Ingombro</span>
+        <span>{R.encumbrance}</span>
         <Select
-          label="Regola di ingombro"
+          label={R.encumbranceRule}
           value={s.encumbranceRule}
           className="w-auto"
           onValue={(v) => update((x) => void (x.encumbranceRule = v))}
           options={[
-            { value: 'off', label: 'Non considerare' },
-            { value: 'standard', label: 'Capacità di carico (FOR × 15)' },
-            { value: 'variant', label: 'Variante: Ingombrato / Pesantemente ingombrato' },
+            { value: 'off', label: R.off },
+            { value: 'standard', label: R.standard },
+            { value: 'variant', label: R.variant },
           ]}
         />
       </label>
@@ -331,7 +324,7 @@ function CharacterRules({ character }: { character: Character }) {
             update((x) => void (x.heroicInspirationOnLongRest = v));
           }}
         />
-        Ispirazione Eroica a ogni Riposo Lungo (Umano: Intraprendente)
+        {R.inspiration}
       </label>
       <label className="flex items-center gap-2">
         <input
@@ -342,7 +335,7 @@ function CharacterRules({ character }: { character: Character }) {
             update((x) => void (x.clearTempHpOnLongRest = v));
           }}
         />
-        Azzera i PF temporanei con il Riposo Lungo
+        {R.clearTemp}
       </label>
     </Section>
   );

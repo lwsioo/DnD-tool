@@ -6,6 +6,7 @@ import type { WikiCategory, WikiEntry } from '@/domain/wiki';
 import { FieldLabel, inputClass, Select } from '@/ui/fields';
 import { TagInput } from '@/ui/TagInput';
 import { NPC_ATTITUDE_LABELS, NPC_STATUS_LABELS } from './categories';
+import { m } from '@/i18n';
 
 function useEntries(campaignId: ID, category: WikiCategory, excludeId: ID) {
   return useLiveQuery(
@@ -50,7 +51,7 @@ function MultiPicker(props: {
   return (
     <FieldLabel label={props.label}>
       {props.options.length === 0 ? (
-        <span className="block py-1.5 text-xs text-muted">Nessuna voce disponibile.</span>
+        <span className="block py-1.5 text-xs text-muted">{m.wiki.noEntriesAvailable}</span>
       ) : (
         <div className="max-h-28 space-y-0.5 overflow-y-auto rounded-md border border-line bg-bg p-1.5 text-sm">
           {props.options.map((o) => (
@@ -125,9 +126,9 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
         onChange({ ...entry, meta: { ...entry.meta, ...patch } });
       return (
         <Grid>
-          <FieldLabel label="Stato">
+          <FieldLabel label={m.wiki.fields.status}>
             <Select
-              label="Stato"
+              label={m.wiki.fields.status}
               value={entry.meta.status}
               onValue={(status) => set({ status })}
               options={(Object.keys(NPC_STATUS_LABELS) as Array<keyof typeof NPC_STATUS_LABELS>).map((k) => ({
@@ -136,9 +137,9 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
               }))}
             />
           </FieldLabel>
-          <FieldLabel label="Attitudine">
+          <FieldLabel label={m.wiki.fields.attitude}>
             <Select
-              label="Attitudine"
+              label={m.wiki.fields.attitude}
               value={entry.meta.attitude}
               onValue={(attitude) => set({ attitude })}
               options={(Object.keys(NPC_ATTITUDE_LABELS) as Array<keyof typeof NPC_ATTITUDE_LABELS>).map(
@@ -146,18 +147,18 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
               )}
             />
           </FieldLabel>
-          <Text label="Ruolo" value={entry.meta.role} onValue={(role) => set({ role })} />
-          <Text label="Specie" value={entry.meta.species} onValue={(species) => set({ species })} />
+          <Text label={m.wiki.fields.role} value={entry.meta.role} onValue={(role) => set({ role })} />
+          <Text label={m.wiki.fields.species} value={entry.meta.species} onValue={(species) => set({ species })} />
           <SinglePicker
             {...ctx}
-            label="Luogo attuale"
+            label={m.wiki.fields.currentLocation}
             category="location"
             value={entry.meta.locationId}
             onValue={(locationId) => set({ locationId })}
           />
           <EntryMultiPicker
             {...ctx}
-            label="Fazioni"
+            label={m.wiki.fields.factions}
             category="faction"
             value={entry.meta.factionIds}
             onValue={(factionIds) => set({ factionIds })}
@@ -170,22 +171,22 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
         onChange({ ...entry, meta: { ...entry.meta, ...patch } });
       return (
         <Grid>
-          <Text label="Regione" value={entry.meta.region} onValue={(region) => set({ region })} />
+          <Text label={m.wiki.fields.region} value={entry.meta.region} onValue={(region) => set({ region })} />
           <Text
-            label="Tipo di luogo"
+            label={m.wiki.fields.locationType}
             value={entry.meta.locationType}
             onValue={(locationType) => set({ locationType })}
           />
           <SinglePicker
             {...ctx}
-            label="Parte di"
+            label={m.wiki.fields.partOf}
             category="location"
             value={entry.meta.parentLocationId}
             onValue={(parentLocationId) => set({ parentLocationId })}
           />
           <EntryMultiPicker
             {...ctx}
-            label="Fazioni presenti"
+            label={m.wiki.fields.factionsPresent}
             category="faction"
             value={entry.meta.factionIds}
             onValue={(factionIds) => set({ factionIds })}
@@ -200,28 +201,28 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
         <Grid>
           <EntryMultiPicker
             {...ctx}
-            label="Capi"
+            label={m.wiki.fields.leaders}
             category="npc"
             value={entry.meta.leaderIds}
             onValue={(leaderIds) => set({ leaderIds })}
           />
           <SinglePicker
             {...ctx}
-            label="Sede"
+            label={m.wiki.fields.headquarters}
             category="location"
             value={entry.meta.headquartersId}
             onValue={(headquartersId) => set({ headquartersId })}
           />
           <SinglePicker
             {...ctx}
-            label="Religione"
+            label={m.wiki.fields.religion}
             category="religion"
             value={entry.meta.religionId}
             onValue={(religionId) => set({ religionId })}
           />
-          <Text label="Obiettivi" value={entry.meta.goals} onValue={(goals) => set({ goals })} />
+          <Text label={m.wiki.fields.goals} value={entry.meta.goals} onValue={(goals) => set({ goals })} />
           <Text
-            label="Atteggiamento verso il gruppo"
+            label={m.wiki.fields.attitudeToParty}
             value={entry.meta.attitude}
             onValue={(attitude) => set({ attitude })}
           />
@@ -233,15 +234,15 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
         onChange({ ...entry, meta: { ...entry.meta, ...patch } });
       return (
         <Grid>
-          <Text label="Divinità" value={entry.meta.deity} onValue={(deity) => set({ deity })} />
-          <Text label="Simbolo" value={entry.meta.symbol} onValue={(symbol) => set({ symbol })} />
+          <Text label={m.wiki.fields.deity} value={entry.meta.deity} onValue={(deity) => set({ deity })} />
+          <Text label={m.wiki.fields.symbol} value={entry.meta.symbol} onValue={(symbol) => set({ symbol })} />
           <Text
-            label="Allineamento"
+            label={m.wiki.fields.alignment}
             value={entry.meta.alignment}
             onValue={(alignment) => set({ alignment })}
           />
-          <FieldLabel label="Domini">
-            <TagInput label="Domini" values={entry.meta.domains} onChange={(domains) => set({ domains })} />
+          <FieldLabel label={m.wiki.fields.domains}>
+            <TagInput label={m.wiki.fields.domains} values={entry.meta.domains} onChange={(domains) => set({ domains })} />
           </FieldLabel>
         </Grid>
       );
@@ -251,9 +252,9 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
         onChange({ ...entry, meta: { ...entry.meta, ...patch } });
       return (
         <Grid>
-          <FieldLabel label="Numero">
+          <FieldLabel label={m.wiki.fields.number}>
             <input
-              aria-label="Numero della sessione"
+              aria-label={m.wiki.fields.sessionNumber}
               inputMode="numeric"
               className={inputClass}
               value={entry.meta.number}
@@ -263,9 +264,9 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
               }}
             />
           </FieldLabel>
-          <FieldLabel label="Data">
+          <FieldLabel label={m.wiki.fields.date}>
             <input
-              aria-label="Data della sessione"
+              aria-label={m.wiki.fields.sessionDate}
               type="date"
               className={inputClass}
               value={entry.meta.date}
@@ -273,12 +274,12 @@ export function MetaEditor({ entry, onChange }: { entry: WikiEntry; onChange: (e
             />
           </FieldLabel>
           <Text
-            label="Data nel mondo"
+            label={m.wiki.fields.inGameDate}
             value={entry.meta.inGameDate}
             onValue={(inGameDate) => set({ inGameDate })}
           />
           <MultiPicker
-            label="Partecipanti"
+            label={m.wiki.fields.participants}
             value={entry.meta.participantIds}
             onValue={(participantIds) => set({ participantIds })}
             options={characters.map((c) => ({ id: c.id, label: c.identity.name }))}

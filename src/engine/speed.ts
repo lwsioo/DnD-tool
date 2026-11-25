@@ -3,6 +3,7 @@ import type { Feet } from '@/domain/primitives';
 import { addParts, effectsFor, type EquipmentState } from './effects';
 import { evaluateOr, type FormulaVars } from './formula';
 import type { ActiveEffect, Breakdown, Part } from './types';
+import { m } from '@/i18n';
 
 export type SpeedKind = 'walk' | 'fly' | 'swim' | 'climb' | 'burrow';
 
@@ -22,7 +23,7 @@ export function computeSpeed(
 ): SpeedResult {
   const shared: Part[] = [];
   const req = eq.armor?.armor?.strRequirement;
-  if (req && strScore < req) shared.push({ label: `${eq.armor!.name} (FOR ${req} richiesta)`, value: -10 });
+  if (req && strScore < req) shared.push({ label: m.engine.strRequired(eq.armor!.name, req), value: -10 });
   shared.push(...addParts(effects, ['speed'], vars));
 
   const caps = effectsFor(effects, ['speed'])

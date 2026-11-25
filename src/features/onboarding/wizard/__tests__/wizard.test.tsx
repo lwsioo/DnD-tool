@@ -59,7 +59,9 @@ describe('wizard di creazione', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Percezione' }));
     await user.click(screen.getByRole('checkbox', { name: 'Spada Lunga' }));
     await next();
-    // 5. Equipaggiamento
+    // 5. Equipaggiamento: la classe propone l'opzione A; qui si sceglie a mano.
+    expect(screen.getByRole('radio', { name: /^A: Cotta di Maglia/ })).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: 'Scelgo io armatura e armi' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Armatura' }), 'chain-mail');
     await user.click(screen.getByRole('checkbox', { name: 'Scudo' }));
     await user.click(screen.getByRole('checkbox', { name: 'Spada Lunga' }));

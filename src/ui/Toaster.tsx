@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { useToastStore, type Toast } from '@/stores/toastStore';
+import { m } from '@/i18n';
 
 const ICONS = { info: Info, success: CheckCircle2, error: AlertTriangle };
 
@@ -44,7 +45,7 @@ function ToastItem({ toast }: { toast: Toast }) {
       )}
       <button
         type="button"
-        aria-label="Chiudi notifica"
+        aria-label={m.common.closeToast}
         onClick={() => dismiss(toast.id)}
         className="text-muted hover:text-ink"
       >

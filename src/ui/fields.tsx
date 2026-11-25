@@ -1,6 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { useEffect, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+import { m } from '@/i18n';
 
 export const inputClass =
   'w-full rounded-md border border-line bg-bg px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-accent';
@@ -123,7 +124,7 @@ export function NumberField({
   return (
     <span className="inline-flex items-center gap-1">
       <StepButton
-        label={`Diminuisci ${label}`}
+        label={m.common.decrease(label)}
         onClick={() => onValue(clamp(value - 1))}
         disabled={value <= min}
       >
@@ -131,7 +132,7 @@ export function NumberField({
       </StepButton>
       {input}
       <StepButton
-        label={`Aumenta ${label}`}
+        label={m.common.increase(label)}
         onClick={() => onValue(clamp(value + 1))}
         disabled={value >= max}
       >

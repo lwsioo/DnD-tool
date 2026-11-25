@@ -7,14 +7,15 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { FieldLabel, inputClass, Select } from '@/ui/fields';
 import { EffectsEditor, FormulaPreview } from './EffectsEditor';
+import { m } from '@/i18n';
 
 type RechargeChoice = 'none' | 'all' | 'one';
 const toChoice = (v: 'all' | number): RechargeChoice => (v === 'all' ? 'all' : v > 0 ? 'one' : 'none');
 const fromChoice = (c: RechargeChoice): 'all' | number => (c === 'all' ? 'all' : c === 'one' ? 1 : 0);
 const RECHARGE_OPTIONS = [
-  { value: 'none' as const, label: 'Nessuno' },
+  { value: 'none' as const, label: m.sheet.rechargeNone },
   { value: 'one' as const, label: '1 uso' },
-  { value: 'all' as const, label: 'Tutti' },
+  { value: 'all' as const, label: m.sheet.rechargeAll },
 ];
 
 interface FeatureEditorProps {
@@ -47,7 +48,7 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
     <Dialog
       open
       onClose={onClose}
-      title={feature ? `Modifica: ${feature.name}` : 'Nuovo privilegio'}
+      title={feature ? m.sheet.editFeature(feature.name) : m.sheet.newFeature}
       size="lg"
       footer={
         <>
@@ -66,7 +67,7 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
     >
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
-          <FieldLabel label="Nome">
+          <FieldLabel label={m.sheet.name}>
             <input
               className={inputClass}
               value={draft.name}
@@ -74,9 +75,9 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
               onChange={(e) => set({ name: e.target.value })}
             />
           </FieldLabel>
-          <FieldLabel label="Categoria">
+          <FieldLabel label={m.sheet.category}>
             <Select
-              label="Categoria"
+              label={m.sheet.category}
               value={draft.category}
               onValue={(v) => set({ category: v })}
               options={(Object.keys(FEATURE_CATEGORY_LABELS) as FeatureCategory[]).map((k) => ({
@@ -85,17 +86,17 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
               }))}
             />
           </FieldLabel>
-          <FieldLabel label="Provenienza">
+          <FieldLabel label={m.sheet.origin}>
             <input
               className={inputClass}
-              placeholder="es. Guerriero 2"
+              placeholder={m.sheet.originPlaceholder}
               value={draft.origin ?? ''}
               onChange={(e) => set({ origin: e.target.value || undefined })}
             />
           </FieldLabel>
         </div>
 
-        <FieldLabel label="Descrizione (Markdown)">
+        <FieldLabel label={m.sheet.descriptionMd}>
           <textarea
             className={inputClass}
             rows={5}
@@ -105,7 +106,7 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
         </FieldLabel>
 
         <fieldset className="space-y-2 rounded-lg border border-line p-3">
-          <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">Usi</legend>
+          <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">{m.sheet.uses}</legend>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -118,11 +119,11 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
                 })
               }
             />
-            Ha un numero limitato di usi
+            {m.sheet.limitedUses}
           </label>
           {draft.uses && (
             <div className="grid items-end gap-3 sm:grid-cols-[1.5fr_1fr_1fr_1fr]">
-              <FieldLabel label="Massimo (formula)">
+              <FieldLabel label={m.sheet.maxFormula}>
                 <input
                   className={inputClass}
                   value={draft.uses.max}
@@ -131,9 +132,9 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
                 />
                 <FormulaPreview formula={draft.uses.max} vars={vars} />
               </FieldLabel>
-              <FieldLabel label="Riposo Breve">
+              <FieldLabel label={m.sheet.shortRest}>
                 <Select
-                  label="Ricarica con Riposo Breve"
+                  label={m.sheet.rechargeShort}
                   value={toChoice(draft.uses.recharge.shortRest)}
                   options={RECHARGE_OPTIONS}
                   onValue={(v) =>
@@ -146,9 +147,9 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
                   }
                 />
               </FieldLabel>
-              <FieldLabel label="Riposo Lungo">
+              <FieldLabel label={m.sheet.longRest}>
                 <Select
-                  label="Ricarica con Riposo Lungo"
+                  label={m.sheet.rechargeLong}
                   value={toChoice(draft.uses.recharge.longRest)}
                   options={RECHARGE_OPTIONS}
                   onValue={(v) =>
@@ -167,7 +168,7 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
                   checked={draft.uses.pinned}
                   onChange={(e) => set({ uses: { ...draft.uses!, pinned: e.target.checked } })}
                 />
-                In barra laterale
+                {m.sheet.pinned}
               </label>
             </div>
           )}
@@ -175,7 +176,7 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
 
         <fieldset className="space-y-2 rounded-lg border border-line p-3">
           <legend className="px-1 text-[11px] font-semibold tracking-wider text-muted uppercase">
-            Effetti sulla scheda
+            {m.sheet.effectsOnSheet}
           </legend>
           <label className="flex items-center gap-2">
             <input
@@ -183,7 +184,7 @@ export function FeatureEditor({ feature, defaultCategory, vars, onSave, onClose 
               checked={draft.toggleable}
               onChange={(e) => set({ toggleable: e.target.checked, active: !e.target.checked })}
             />
-            Attivabile (es. Ira): gli effetti valgono solo quando è attivo
+            {m.sheet.toggleable}
           </label>
           <EffectsEditor effects={draft.effects} vars={vars} onChange={(effects) => set({ effects })} />
         </fieldset>

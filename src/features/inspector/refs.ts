@@ -6,6 +6,7 @@ import { WEAPONS_BY_ID } from '@/data/srd/weapons';
 import { ARMOR_BY_ID } from '@/data/srd/armor';
 import type { MasteryKey, WeaponPropertyKey } from '@/domain/items';
 import type { ID, Markdown } from '@/domain/primitives';
+import { m } from '@/i18n';
 
 /** Cosa può mostrare l'Inspector. Ogni voce è un riferimento leggero, risolto dal renderer. */
 export type InspectorRef =
@@ -28,21 +29,7 @@ export type InspectorRef =
 
 export type InspectorKind = InspectorRef['kind'];
 
-export const KIND_LABELS: Record<InspectorKind, string> = {
-  property: 'Proprietà dell’arma',
-  mastery: 'Maestria nelle armi',
-  condition: 'Condizione',
-  weapon: 'Arma',
-  armor: 'Armatura',
-  spell: 'Incantesimo',
-  species: 'Specie',
-  background: 'Background',
-  feat: 'Talento',
-  feature: 'Privilegio',
-  item: 'Oggetto',
-  wiki: 'Campagna',
-  text: 'Nota',
-};
+export const KIND_LABELS: Record<InspectorKind, string> = m.terms.inspectorKind;
 
 /** Chiave stabile, per non duplicare in cronologia la voce già aperta. */
 export function refKey(ref: InspectorRef): string {

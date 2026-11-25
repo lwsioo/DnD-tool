@@ -14,6 +14,7 @@ import type { InspectorRef } from '@/features/inspector/refs';
 import { spellLevelLine } from '@/features/grimoire/spellText';
 import { CATEGORY_INFO, displayTitle, entryPath } from '@/features/wiki/categories';
 import { normalizeKey } from '@/lib/normalizeKey';
+import { m as msg } from '@/i18n';
 
 export type SearchKind = 'wiki' | 'spell' | 'character' | 'feature' | 'item' | 'rule';
 
@@ -31,12 +32,12 @@ export interface SearchDoc {
 }
 
 export const KIND_GROUPS: Array<{ kind: SearchKind; label: string }> = [
-  { kind: 'wiki', label: 'Voci della campagna' },
-  { kind: 'character', label: 'Personaggi' },
-  { kind: 'feature', label: 'Privilegi del personaggio' },
-  { kind: 'item', label: 'Oggetti del personaggio' },
-  { kind: 'spell', label: 'Incantesimi' },
-  { kind: 'rule', label: 'Regole' },
+  { kind: 'wiki', label: msg.search.groups.wiki },
+  { kind: 'character', label: msg.search.groups.character },
+  { kind: 'feature', label: msg.search.groups.feature },
+  { kind: 'item', label: msg.search.groups.item },
+  { kind: 'spell', label: msg.search.groups.spell },
+  { kind: 'rule', label: msg.search.groups.rule },
 ];
 
 /** Testo leggibile da Markdown: niente simboli di formattazione né sintassi dei link. */
@@ -58,7 +59,7 @@ export function ruleDocs(): SearchDoc[] {
       id: `cond:${k}`,
       kind: 'rule',
       title: c.name,
-      subtitle: 'Condizione',
+      subtitle: msg.search.condition,
       aliases: c.nameEn,
       text: c.summary,
       ref: { kind: 'condition', key: k },
@@ -70,7 +71,7 @@ export function ruleDocs(): SearchDoc[] {
       id: `prop:${k}`,
       kind: 'rule',
       title: p.name,
-      subtitle: 'Proprietà dell’arma',
+      subtitle: msg.search.weaponProperty,
       aliases: p.nameEn,
       text: p.summary,
       ref: { kind: 'property', key: k },
@@ -82,7 +83,7 @@ export function ruleDocs(): SearchDoc[] {
       id: `mastery:${k}`,
       kind: 'rule',
       title: m.name,
-      subtitle: 'Maestria nelle armi',
+      subtitle: msg.search.weaponMastery,
       aliases: m.nameEn,
       text: m.summary,
       ref: { kind: 'mastery', key: k },
@@ -93,7 +94,7 @@ export function ruleDocs(): SearchDoc[] {
       id: `weapon:${w.id}`,
       kind: 'rule',
       title: w.name,
-      subtitle: `Arma ${w.category === 'simple' ? 'semplice' : 'da guerra'}`,
+      subtitle: msg.search.weaponKind(w.category === 'simple'),
       aliases: w.nameEn,
       ref: { kind: 'weapon', id: w.id },
     });
@@ -111,9 +112,9 @@ export function ruleDocs(): SearchDoc[] {
   const origins: Array<
     [string, Array<{ id: string; name: string; nameEn?: string }>, 'species' | 'background' | 'feat']
   > = [
-    ['Specie', SRD_SPECIES, 'species'],
-    ['Background', SRD_BACKGROUNDS, 'background'],
-    ['Talento d’origine', SRD_FEATS, 'feat'],
+    [msg.search.species, SRD_SPECIES, 'species'],
+    [msg.search.background, SRD_BACKGROUNDS, 'background'],
+    [msg.search.originFeat, SRD_FEATS, 'feat'],
   ];
   for (const [subtitle, list, kind] of origins) {
     for (const d of list) {
@@ -172,7 +173,7 @@ export function buildDocs(src: SearchSources): SearchDoc[] {
     docs.push({
       id: `character:${c.id}`,
       kind: 'character',
-      title: c.identity.name || 'Senza nome',
+      title: c.identity.name || msg.search.unnamed,
       subtitle: [c.identity.species, classes].filter(Boolean).join(' · '),
       path: `/pg/${c.id}/scheda`,
     });

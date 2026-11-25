@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useId, useState } from 'react';
 import { inputClass } from './fields';
+import { m } from '@/i18n';
 
 interface TagInputProps {
   values: string[];
@@ -30,7 +31,7 @@ export function TagInput({ values, onChange, label, suggestions = [], placeholde
             {v}
             <button
               type="button"
-              aria-label={`Rimuovi ${v}`}
+              aria-label={m.common.remove(v)}
               onClick={() => onChange(values.filter((x) => x !== v))}
               className="rounded-full p-0.5 text-muted hover:text-ink"
             >
@@ -43,7 +44,7 @@ export function TagInput({ values, onChange, label, suggestions = [], placeholde
         aria-label={label}
         list={suggestions.length ? listId : undefined}
         value={text}
-        placeholder={placeholder ?? 'Aggiungi e premi Invio'}
+        placeholder={placeholder ?? m.common.addAndEnter}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ',') {

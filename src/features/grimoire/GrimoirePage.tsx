@@ -33,14 +33,13 @@ import { LibraryDialog } from './LibraryDialog';
 import { SourcesDialog } from './SourcesDialog';
 import { SpellForm } from './SpellForm';
 import { castingTimeText, componentsText, rangeText, SCHOOL_LABELS } from './spellText';
+import { LANG_TAG, m } from '@/i18n';
+import { canonicalClass } from '@/data/srd/classes';
 
 const STATUS_LABELS: Record<CharacterSpellStatus, string> = {
-  known: 'Conosciuto',
-  prepared: 'Preparato',
-  alwaysPrepared: 'Sempre pronto',
-  free: 'Gratis',
+  ...m.grimoire.statuses,
 };
-const ORDINAL = (l: number) => (l === 0 ? 'Trucchetti' : `${l}° livello`);
+const ORDINAL = (l: number) => m.grimoire.levelTitle(l);
 
 type Modal =
   | { kind: 'cast'; entry: SpellEntry }
@@ -82,6 +81,10 @@ export function GrimoirePage() {
   const missing = library ? character.spellcasting.spells.filter((cs) => !library.has(cs.spellId)).length : 0;
   const shown = filterSpells(entries, filters);
   const levels = [...new Set(entries.map((e) => e.spell.level))].sort((a, b) => a - b);
+  const spellClasses = [...new Set(entries.flatMap((e) => e.spell.classes.map(canonicalClass)))].sort((a, b) =>
+    a.localeCompare(b, LANG_TAG),
+  );
+  const activeClasses = (filters.classes ?? []).map(canonicalClass);
   const groups = [...new Set(shown.map((e) => e.spell.level))].sort((a, b) => a - b);
 
   const addToCharacter = (spells: Spell[]) => {
@@ -115,9 +118,9 @@ export function GrimoirePage() {
       if (d.combat.concentration?.characterSpellId === entry.cs.id) delete d.combat.concentration;
     });
     toast({
-      message: `${entry.spell.name} tolto dal grimorio.`,
+      message: m.grimoire.removed(entry.spell.name),
       action: {
-        label: 'Annulla',
+        label: m.common.undo,
         onClick: () => mutateNow((d) => void d.spellcasting.spells.push(entry.cs)),
       },
     });
@@ -141,11 +144,11 @@ export function GrimoirePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-4 lg:p-6">
       {/* Intestazione: fonti con caratteristica, CD e attacco */}
-      <section aria-label="Incantatore" className="space-y-3 rounded-xl border border-line bg-panel p-4">
+      <section aria-label={m.grimoire.caster} className="space-y-3 rounded-xl border border-line bg-panel p-4">
         <div className="flex flex-wrap items-center gap-2">
           {sources.length > 1 && (
-            <div role="tablist" aria-label="Fonti" className="flex flex-wrap gap-1">
-              {[{ id: 'all', label: 'Tutte' }, ...sources].map((s) => (
+            <div role="tablist" aria-label={m.grimoire.sources} className="flex flex-wrap gap-1">
+              {[{ id: 'all', label: m.grimoire.allSources }, ...sources].map((s) => (
                 <button
                   key={s.id}
                   type="button"
@@ -161,13 +164,13 @@ export function GrimoirePage() {
           )}
           <span className="flex-1" />
           <Button size="sm" variant="ghost" icon={Settings2} onClick={() => setModal({ kind: 'sources' })}>
-            Fonti
+            {m.grimoire.sources}
           </Button>
           <Button size="sm" icon={Library} onClick={() => setModal({ kind: 'library' })}>
-            Libreria
+            {m.grimoire.library}
           </Button>
           <Button size="sm" icon={FileUp} onClick={() => setModal({ kind: 'import' })}>
-            Importa
+            {m.grimoire.import}
           </Button>
           <Button
             size="sm"
@@ -176,14 +179,13 @@ export function GrimoirePage() {
             disabled={sources.length === 0}
             onClick={() => setModal({ kind: 'form', spell: null, addAfterSave: true })}
           >
-            Nuovo
+            {m.grimoire.new}
           </Button>
         </div>
 
         {sources.length === 0 ? (
           <p className="text-sm text-muted">
-            Nessuna fonte da incantatore. Aggiungi una classe incantatrice nella scheda oppure crea una fonte
-            da “Fonti” (es. un talento che concede incantesimi).
+            {m.grimoire.noSources}
           </p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -196,20 +198,20 @@ export function GrimoirePage() {
                   {s.label} <span className="text-xs text-muted">· {ABILITY_LABELS[s.ability].short}</span>
                 </span>
                 <span className="text-xs text-muted">
-                  Mod <strong className="text-ink">{s.mod >= 0 ? `+${s.mod}` : s.mod}</strong>
+                  {m.grimoire.mod} <strong className="text-ink">{s.mod >= 0 ? `+${s.mod}` : s.mod}</strong>
                 </span>
                 <span className="text-xs text-muted">
-                  CD <Explained breakdown={s.dc} signed={false} className="font-bold text-ink" />
+                  {m.grimoire.dc} <Explained breakdown={s.dc} signed={false} className="font-bold text-ink" />
                 </span>
                 <span className="text-xs text-muted">
-                  Attacco <Explained breakdown={s.attack} className="font-bold text-ink" />{' '}
+                  {m.grimoire.attack} <Explained breakdown={s.attack} className="font-bold text-ink" />{' '}
                   <RollBadge info={s.attack} />
                 </span>
                 {s.preparedMax !== undefined && (
                   <span
                     className={cn('text-xs', s.preparedCount > s.preparedMax ? 'text-danger' : 'text-muted')}
                   >
-                    Preparati {s.preparedCount}/{s.preparedMax}
+                    {m.grimoire.prepared(s.preparedCount, s.preparedMax)}
                   </span>
                 )}
               </div>
@@ -217,12 +219,12 @@ export function GrimoirePage() {
           </div>
         )}
         {derived.cannotCastSpells && (
-          <p className="text-xs text-danger">Armatura senza addestramento: non puoi lanciare incantesimi.</p>
+          <p className="text-xs text-danger">{m.grimoire.cannotCastShort}</p>
         )}
       </section>
 
       {/* Filtri */}
-      <section aria-label="Filtri" className="flex flex-wrap items-center gap-2">
+      <section aria-label={m.grimoire.filters} className="flex flex-wrap items-center gap-2">
         {levels.map((l) => (
           <button
             key={l}
@@ -231,7 +233,7 @@ export function GrimoirePage() {
             className={chip(filters.levels.includes(l))}
             onClick={() => setFilters({ ...filters, levels: toggleIn(filters.levels, l) })}
           >
-            {l === 0 ? 'Trucchetti' : `${l}°`}
+            {m.grimoire.levelChip(l)}
           </button>
         ))}
         <span className="mx-1 h-4 w-px bg-line" aria-hidden />
@@ -252,16 +254,33 @@ export function GrimoirePage() {
             key={t}
             type="button"
             aria-pressed={filters.tags.includes(t)}
-            title={{ C: 'Concentrazione', R: 'Rituale', M: 'Componente materiale' }[t]}
+            title={m.grimoire.tagTitles[t]}
             className={chip(filters.tags.includes(t))}
             onClick={() => setFilters({ ...filters, tags: toggleIn(filters.tags, t) })}
           >
             {t}
           </button>
         ))}
+        {spellClasses.length > 1 && (
+          <>
+            <span className="mx-1 h-4 w-px bg-line" aria-hidden />
+            {spellClasses.map((cl) => (
+              <button
+                key={cl}
+                type="button"
+                aria-pressed={activeClasses.includes(cl)}
+                title={m.grimoire.onlyClass(cl)}
+                className={chip(activeClasses.includes(cl))}
+                onClick={() => setFilters({ ...filters, classes: toggleIn(activeClasses, cl) })}
+              >
+                {cl}
+              </button>
+            ))}
+          </>
+        )}{' '}
         <input
-          aria-label="Cerca nel grimorio"
-          placeholder="Cerca…"
+          aria-label={m.grimoire.search}
+          placeholder={m.grimoire.searchPlaceholder}
           value={filters.text}
           onChange={(e) => setFilters({ ...filters, text: e.target.value })}
           className={cn(inputClass, 'ml-auto w-40 py-1')}
@@ -269,38 +288,39 @@ export function GrimoirePage() {
         {(filters.levels.length > 0 ||
           filters.statuses.length > 0 ||
           filters.tags.length > 0 ||
+          activeClasses.length > 0 ||
           filters.text) && (
           <button
             type="button"
             className="text-xs text-accent hover:underline"
             onClick={() => setFilters(EMPTY_FILTERS)}
           >
-            Azzera filtri
+            {m.grimoire.clearFilters}
           </button>
         )}
       </section>
 
       {missing > 0 && (
         <p className="text-xs text-danger">
-          {missing} incantesimi del personaggio non sono più nella libreria.
+          {m.grimoire.missing(missing)}
         </p>
       )}
 
       {/* Elenco per livello */}
       {entries.length === 0 ? (
         <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">
-          Grimorio vuoto. Aggiungi incantesimi dalla{' '}
+          {m.grimoire.emptyBefore}{' '}
           <button
             type="button"
             className="text-accent hover:underline"
             onClick={() => setModal({ kind: 'library' })}
           >
-            Libreria
+            {m.grimoire.library}
           </button>
-          , creane uno nuovo o importali da 5etools.
+          {m.grimoire.emptyAfter}
         </p>
       ) : shown.length === 0 ? (
-        <p className="text-sm text-muted">Nessun incantesimo con questi filtri.</p>
+        <p className="text-sm text-muted">{m.grimoire.noMatches}</p>
       ) : (
         groups.map((level) => {
           const slot = derived.slots.standard[level - 1];
@@ -314,7 +334,7 @@ export function GrimoirePage() {
                 <h2 className="flex-1 font-display tracking-wide">{ORDINAL(level)}</h2>
                 {level > 0 && slot && slot.max > 0 && (
                   <UsesCounter
-                    label={`Slot di ${level}° livello`}
+                    label={m.grimoire.slotOfLevel(level)}
                     max={slot.max}
                     used={slot.used}
                     onUsed={(used) => mutateNow((d) => void (d.spellcasting.slots.used[level - 1] = used))}
@@ -332,7 +352,7 @@ export function GrimoirePage() {
                         {spell.level > 0 && (cs.status === 'known' || cs.status === 'prepared') ? (
                           <input
                             type="checkbox"
-                            aria-label={`${spell.name} preparato`}
+                            aria-label={m.grimoire.preparedAria(spell.name)}
                             checked={cs.status === 'prepared'}
                             onChange={() => setStatus(cs, togglePrepared(cs.status))}
                             className="size-4 accent-[var(--c-accent)]"
@@ -350,10 +370,10 @@ export function GrimoirePage() {
                           >
                             {spell.name}
                           </button>
-                          {spell.duration.concentration && <Tag title="Concentrazione">C</Tag>}
-                          {spell.ritual && <Tag title="Rituale">R</Tag>}
+                          {spell.duration.concentration && <Tag title={m.grimoire.tagTitles.C}>C</Tag>}
+                          {spell.ritual && <Tag title={m.grimoire.tagTitles.R}>R</Tag>}
                           {spell.components.m && (
-                            <Tag title={spell.components.material ?? 'Materiale'}>M</Tag>
+                            <Tag title={spell.components.material ?? m.grimoire.material}>M</Tag>
                           )}
                           <div className="text-[11px] text-muted">
                             {castingTimeText(spell.castingTime)} · {rangeText(spell.range, units)} ·{' '}
@@ -364,14 +384,14 @@ export function GrimoirePage() {
                         </div>
                         {cs.status === 'free' && resource && (
                           <UsesCounter
-                            label={`Lanci gratuiti di ${spell.name}`}
+                            label={m.grimoire.freeCasts(spell.name)}
                             max={resource.max}
                             used={Math.min(resource.used, resource.max)}
                             onUsed={(used) => updateCs(cs.id, (x) => x.freeUses && (x.freeUses.used = used))}
                           />
                         )}
                         <select
-                          aria-label={`Stato di ${spell.name}`}
+                          aria-label={m.grimoire.statusOf(spell.name)}
                           value={cs.status}
                           onChange={(e) => {
                             const status = e.target.value as CharacterSpellStatus;
@@ -386,11 +406,11 @@ export function GrimoirePage() {
                           ))}
                         </select>
                         <Button size="sm" icon={Sparkles} onClick={() => setModal({ kind: 'cast', entry })}>
-                          Lancia
+                          {m.grimoire.castButton}
                         </Button>
                         <IconButton
                           icon={Trash2}
-                          label={`Togli ${spell.name} dal grimorio`}
+                          label={m.grimoire.removeFrom(spell.name)}
                           onClick={() => removeCs(entry)}
                         />
                       </li>
@@ -417,14 +437,9 @@ export function GrimoirePage() {
             const { cs, spell } = modal.entry;
             mutateNow((d) => castSpell(d, cs.id, mode, spell.duration.concentration));
             setModal(null);
-            const how = {
-              cantrip: '',
-              slot: ` con uno slot di ${castLevel}°`,
-              pact: ' con uno slot del Patto',
-              free: ' gratis',
-              ritual: ' come rituale',
-            }[mode.kind];
-            toast({ tone: 'success', message: `Lanciato ${spell.name}${how}.` });
+            const H = m.grimoire.how;
+            const how = mode.kind === 'slot' ? H.slot(castLevel) : H[mode.kind];
+            toast({ tone: 'success', message: m.grimoire.castToast(spell.name, how) });
           }}
         />
       )}
@@ -462,7 +477,7 @@ export function GrimoirePage() {
           onImported={(spells, add) => {
             if (add) addToCharacter(spells);
             setModal(null);
-            toast({ tone: 'success', message: `${spells.length} incantesimi importati nella libreria.` });
+            toast({ tone: 'success', message: m.grimoire.imported(spells.length) });
           }}
         />
       )}

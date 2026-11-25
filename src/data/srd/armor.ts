@@ -1,4 +1,5 @@
 import type { ArmorData } from '@/domain/items';
+import { LOCALE, pick } from '@/i18n/locale';
 
 export interface ArmorBase {
   id: string;
@@ -20,7 +21,7 @@ export interface ArmorBase {
 const gp = (n: number) => n * 100;
 
 // prettier-ignore
-export const ARMOR: ArmorBase[] = [
+const ARMOR_IT: ArmorBase[] = [
   { id: 'padded', name: 'Imbottita', nameEn: 'Padded Armor', category: 'light', baseAc: 11, dexCap: null, stealthDisadvantage: true, weightLb: 8, costCp: gp(5), don: '1 minuto', doff: '1 minuto' },
   { id: 'leather', name: 'Cuoio', nameEn: 'Leather Armor', category: 'light', baseAc: 11, dexCap: null, stealthDisadvantage: false, weightLb: 10, costCp: gp(10), don: '1 minuto', doff: '1 minuto' },
   { id: 'studded-leather', name: 'Cuoio Borchiato', nameEn: 'Studded Leather Armor', category: 'light', baseAc: 12, dexCap: null, stealthDisadvantage: false, weightLb: 13, costCp: gp(45), don: '1 minuto', doff: '1 minuto' },
@@ -36,18 +37,36 @@ export const ARMOR: ArmorBase[] = [
   { id: 'shield', name: 'Scudo', nameEn: 'Shield', category: 'shield', baseAc: 2, dexCap: null, stealthDisadvantage: false, weightLb: 6, costCp: gp(10), don: '1 azione', doff: '1 azione' },
 ];
 
+const TIME_EN: Record<string, string> = {
+  '1 minuto': '1 minute',
+  '5 minuti': '5 minutes',
+  '10 minuti': '10 minutes',
+  '1 azione': '1 action',
+};
+
+/** Armature SRD nella lingua attiva. */
+export const ARMOR: ArmorBase[] =
+  LOCALE === 'en'
+    ? ARMOR_IT.map((a) => ({
+        ...a,
+        name: a.nameEn,
+        don: TIME_EN[a.don] ?? a.don,
+        doff: TIME_EN[a.doff] ?? a.doff,
+      }))
+    : ARMOR_IT;
+
 export const ARMOR_BY_ID: ReadonlyMap<string, ArmorBase> = new Map(ARMOR.map((a) => [a.id, a]));
 
-export const ARMOR_CATEGORY_LABELS: Record<ArmorBase['category'], string> = {
-  light: 'Armatura leggera',
-  medium: 'Armatura media',
-  heavy: 'Armatura pesante',
-  shield: 'Scudo',
-};
+export const ARMOR_CATEGORY_LABELS: Record<ArmorBase['category'], string> = pick(
+  { light: 'Armatura leggera', medium: 'Armatura media', heavy: 'Armatura pesante', shield: 'Scudo' },
+  { light: 'Light armor', medium: 'Medium armor', heavy: 'Heavy armor', shield: 'Shield' },
+);
+
+const DEX_MOD = pick('mod. DES', 'Dex modifier');
 
 /** Testo della CA come nelle tabelle: "11 + mod. DES", "14 + mod. DES (max 2)", "18", "+2". */
 export function armorAcText(a: ArmorBase): string {
   if (a.category === 'shield') return `+${a.baseAc}`;
   if (a.dexCap === 0) return String(a.baseAc);
-  return a.dexCap === null ? `${a.baseAc} + mod. DES` : `${a.baseAc} + mod. DES (max ${a.dexCap})`;
+  return a.dexCap === null ? `${a.baseAc} + ${DEX_MOD}` : `${a.baseAc} + ${DEX_MOD} (max ${a.dexCap})`;
 }

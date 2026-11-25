@@ -1,6 +1,7 @@
 import { cn } from '@/lib/cn';
 import { StepButton } from './fields';
 import { Minus, Plus } from 'lucide-react';
+import { m } from '@/i18n';
 
 interface UsesCounterProps {
   max: number;
@@ -23,7 +24,7 @@ export function UsesCounter({ max, used, onUsed, label, pipLimit = 10 }: UsesCou
     return (
       <span className="inline-flex items-center gap-1.5" role="group" aria-label={label}>
         <StepButton
-          label={`Spendi 1 ${label}`}
+          label={m.common.spendOne(label)}
           onClick={() => onUsed(Math.min(max, used + 1))}
           disabled={remaining <= 0}
         >
@@ -34,7 +35,7 @@ export function UsesCounter({ max, used, onUsed, label, pipLimit = 10 }: UsesCou
           <span className="text-muted">/{max}</span>
         </span>
         <StepButton
-          label={`Recupera 1 ${label}`}
+          label={m.common.recoverOne(label)}
           onClick={() => onUsed(Math.max(0, used - 1))}
           disabled={used <= 0}
         >
@@ -56,7 +57,7 @@ export function UsesCounter({ max, used, onUsed, label, pipLimit = 10 }: UsesCou
           <button
             key={i}
             type="button"
-            aria-label={filled ? `Spendi fino a ${i} rimasti` : `Recupera fino a ${i + 1} rimasti`}
+            aria-label={filled ? m.common.spendTo(i) : m.common.recoverTo(i + 1)}
             onClick={() => onUsed(max - (filled ? i : i + 1))}
             className={cn(
               'size-3.5 rounded-full border transition-colors',

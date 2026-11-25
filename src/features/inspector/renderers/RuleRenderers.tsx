@@ -7,6 +7,7 @@ import { InspectorChip } from '@/ui/InspectorChip';
 import { MarkdownView } from '@/ui/MarkdownView';
 import { describeEffect } from '../describeEffect';
 import { Article, Section } from './Article';
+import { m as msg } from '@/i18n';
 
 function WeaponChips({ ids }: { ids: Array<{ id: string; name: string }> }) {
   if (ids.length === 0) return null;
@@ -25,10 +26,10 @@ export function PropertyRenderer({ propertyKey }: { propertyKey: WeaponPropertyK
   const p = WEAPON_PROPERTIES[propertyKey];
   const weapons = WEAPONS.filter((w) => w.properties.some((x) => x.key === propertyKey));
   return (
-    <Article title={p.name} subtitle={`Proprietà dell’arma · ${p.nameEn}`}>
+    <Article title={p.name} subtitle={msg.inspector.kindLine(msg.inspector.weaponProperty, p.name, p.nameEn)}>
       <MarkdownView compact>{p.body}</MarkdownView>
       {weapons.length > 0 && (
-        <Section title="Armi SRD con questa proprietà">
+        <Section title={msg.inspector.srdWithProperty}>
           <WeaponChips ids={weapons} />
         </Section>
       )}
@@ -39,13 +40,13 @@ export function PropertyRenderer({ propertyKey }: { propertyKey: WeaponPropertyK
 export function MasteryRenderer({ masteryKey }: { masteryKey: MasteryKey }) {
   const m = WEAPON_MASTERIES[masteryKey];
   return (
-    <Article title={m.name} subtitle={`Maestria nelle armi · ${m.nameEn}`}>
+    <Article title={m.name} subtitle={msg.inspector.kindLine(msg.inspector.weaponMastery, m.name, m.nameEn)}>
       <MarkdownView compact>{m.body}</MarkdownView>
       <p className="text-xs text-muted">
         Puoi usare la proprietà di maestria di un'arma solo se un privilegio te ne ha concesso l'uso (es.
         Maestria nelle Armi di Guerriero, Barbaro, Paladino, Ranger e Ladro).
       </p>
-      <Section title="Armi SRD con questa maestria">
+      <Section title={msg.inspector.srdWithMastery}>
         <WeaponChips ids={WEAPONS.filter((w) => w.mastery === masteryKey)} />
       </Section>
     </Article>
@@ -55,10 +56,10 @@ export function MasteryRenderer({ masteryKey }: { masteryKey: MasteryKey }) {
 export function ConditionRenderer({ conditionKey }: { conditionKey: ConditionKey }) {
   const c = CONDITIONS[conditionKey];
   return (
-    <Article title={c.name} subtitle={`Condizione · ${c.nameEn}`}>
+    <Article title={c.name} subtitle={msg.inspector.kindLine(msg.inspector.condition, c.name, c.nameEn)}>
       <MarkdownView compact>{c.body}</MarkdownView>
       {c.effects.length > 0 && (
-        <Section title="Applicato in automatico alla scheda">
+        <Section title={msg.inspector.autoApplied}>
           <ul className="list-inside list-disc text-sm text-muted">
             {[...new Set(c.effects.map(describeEffect))].map((d) => (
               <li key={d}>{d}</li>

@@ -4,12 +4,13 @@ import { ABILITIES, SKILLS, type Ability, type ProfLevel, type SkillKey } from '
 import { CHARACTER_SCHEMA_VERSION, type Character } from './character';
 import type { ID } from './primitives';
 import type { Campaign, WikiCategory, WikiEntry, WikiMetaFor } from './wiki';
+import { pick } from '@/i18n/locale';
 
 const mapKeys = <K extends string, V>(keys: readonly K[], value: () => V): Record<K, V> =>
   Object.fromEntries(keys.map((k) => [k, value()])) as Record<K, V>;
 
 /** Personaggio vuoto e valido: punteggi a 10, nessuna classe, nessuna competenza. */
-export function createBlankCharacter(name = 'Nuovo personaggio', now = Date.now()): Character {
+export function createBlankCharacter(name = pick('Nuovo personaggio', 'New character'), now = Date.now()): Character {
   return {
     id: newId(),
     schemaVersion: CHARACTER_SCHEMA_VERSION,

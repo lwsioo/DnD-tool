@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { m } from '@/i18n';
 
 interface ArticleProps {
   title: string;
@@ -46,5 +47,5 @@ export function Section({ title, children }: { title: string; children: ReactNod
 }
 
 export function NotFound({ what }: { what: string }) {
-  return <p className="text-sm text-muted">{what} non trovato: forse è stato eliminato.</p>;
+  return <p className="text-sm text-muted">{m.inspector.notFound(what)}</p>;
 }

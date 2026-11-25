@@ -26,16 +26,11 @@ import {
   type WizardDraft,
 } from './logic';
 import { AbilitiesStep, ClassStep, ConceptStep, EquipmentStep, MagicStep, ProficienciesStep } from './steps';
+import { m } from '@/i18n';
 
-const STEPS = [
-  'Concetto',
-  'Classe',
-  'Caratteristiche',
-  'Competenze',
-  'Equipaggiamento',
-  'Magia',
-  'Riepilogo',
-] as const;
+const W = m.onboarding.wizard;
+
+const STEPS = W.steps;
 
 /** Creazione guidata del personaggio: sei passi saltabili e un riepilogo con i valori già calcolati. */
 export function WizardPage() {
@@ -55,7 +50,7 @@ export function WizardPage() {
       void requestPersistence();
       useUiStore.getState().setActiveCharacter(character.id);
       useUiStore.getState().setSheetEditMode(false);
-      toast({ tone: 'success', message: `${character.identity.name} è pronto all’avventura.` });
+      toast({ tone: 'success', message: W.ready(character.identity.name) });
       navigate(`/pg/${character.id}/scheda`);
     } finally {
       setBusy(false);
@@ -67,10 +62,10 @@ export function WizardPage() {
     <div className="mx-auto max-w-4xl space-y-5 p-4 lg:p-6">
       <div className="flex items-center gap-2">
         <Wand2 className="size-5 text-accent" aria-hidden />
-        <h2 className="font-display text-2xl tracking-wide">Nuovo personaggio</h2>
+        <h2 className="font-display text-2xl tracking-wide">{W.title}</h2>
       </div>
 
-      <nav aria-label="Passi" className="flex flex-wrap gap-1">
+      <nav aria-label={W.stepsNav} className="flex flex-wrap gap-1">
         {STEPS.map((label, i) => (
           <button
             key={label}
@@ -104,16 +99,16 @@ export function WizardPage() {
 
       <div className="flex items-center gap-2">
         <Button variant="ghost" icon={ArrowLeft} disabled={step === 0} onClick={() => setStep(step - 1)}>
-          Indietro
+          {m.onboarding.tour.back}
         </Button>
         <span className="flex-1" />
         {step < STEPS.length - 1 ? (
           <Button variant="primary" icon={ArrowRight} onClick={() => setStep(step + 1)}>
-            Avanti
+            {m.onboarding.tour.next}
           </Button>
         ) : (
           <Button variant="primary" icon={Check} disabled={busy} onClick={() => void create()}>
-            Crea personaggio
+            {W.create}
           </Button>
         )}
       </div>
@@ -143,12 +138,12 @@ function Summary({ d, lib }: { d: WizardDraft; lib: OriginLibrary }) {
         </p>
       </div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-        {stat('CA', String(x.ac.total))}
-        {stat('PF', String(x.hp.max.total))}
-        {stat('Iniziativa', formatBonus(x.initiative.total))}
-        {stat('Velocità', formatDistance(x.speed.walk.total, units))}
-        {stat('Competenza', formatBonus(x.pb))}
-        {stat('Perc. passiva', String(x.passive.perception.total))}
+        {stat(W.stats.ac, String(x.ac.total))}
+        {stat(W.stats.hp, String(x.hp.max.total))}
+        {stat(W.stats.initiative, formatBonus(x.initiative.total))}
+        {stat(W.stats.speed, formatDistance(x.speed.walk.total, units))}
+        {stat(W.stats.proficiency, formatBonus(x.pb))}
+        {stat(W.stats.passive, String(x.passive.perception.total))}
       </div>
       <div className="grid grid-cols-6 gap-2">
         {ABILITIES.map((a) => (
@@ -161,24 +156,24 @@ function Summary({ d, lib }: { d: WizardDraft; lib: OriginLibrary }) {
       </div>
       {x.attacks.length > 0 && (
         <p className="text-sm">
-          <span className="text-muted">Attacchi: </span>
+          <span className="text-muted">{W.attacks}</span>
           {x.attacks.map((a) => `${a.name} ${formatBonus(a.toHit.total)} (${a.damage.text})`).join(' · ')}
         </p>
       )}
       {c.features.length > 0 && (
         <p className="text-sm">
-          <span className="text-muted">Tratti e talenti: </span>
+          <span className="text-muted">{W.traits}</span>
           {c.features.map((f) => f.name).join(' · ')}
         </p>
       )}
       {x.spellcasting.map((s) => (
         <p key={s.sourceId} className="text-sm">
-          <span className="text-muted">{s.label}: </span>CD {s.dc.total}, attacco{' '}
-          {formatBonus(s.attack.total)}
+          <span className="text-muted">{s.label}: </span>
+          {W.dcAttack(s.dc.total, formatBonus(s.attack.total))}
         </p>
       ))}
       {!abilities.ok && (
-        <p className="text-xs text-danger">Caratteristiche: {abilities.message} Le mancanti valgono 10.</p>
+        <p className="text-xs text-danger">{W.missingScores(abilities.message ?? '')}</p>
       )}
       {x.warnings.map((w) => (
         <p key={w} className="text-xs text-danger">

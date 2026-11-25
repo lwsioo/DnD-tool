@@ -9,6 +9,7 @@ import {
   selectCurrentInspectorRef,
   useUiStore,
 } from '@/stores/uiStore';
+import { m } from '@/i18n';
 
 /**
  * Pannello destro contestuale.
@@ -48,18 +49,18 @@ export function InspectorDrawer() {
         onClick={() => !pinned && closeInspector()}
       />
       <aside
-        aria-label="Pannello dettagli"
+        aria-label={m.app.inspector.region}
         style={{ '--inspector-w': `${width}px` } as React.CSSProperties}
         className="fixed inset-y-0 right-0 z-30 flex w-[min(420px,100vw)] flex-col border-l border-line bg-panel shadow-2xl xl:relative xl:z-auto xl:w-(--inspector-w) xl:shrink-0 xl:shadow-none"
       >
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Ridimensiona pannello"
+          aria-label={m.app.inspector.resize}
           aria-valuemin={INSPECTOR_MIN_WIDTH}
           aria-valuemax={INSPECTOR_MAX_WIDTH}
           aria-valuenow={width}
-          title="Trascina per ridimensionare"
+          title={m.app.inspector.resizeHint}
           onPointerDown={onResizeStart}
           onPointerMove={onResizeMove}
           onPointerUp={onResizeEnd}
@@ -71,26 +72,26 @@ export function InspectorDrawer() {
         <div className="flex h-14 shrink-0 items-center gap-1 border-b border-line px-3">
           <IconButton
             icon={ChevronLeft}
-            label="Indietro (Alt+←)"
+            label={m.app.inspector.back}
             disabled={index <= 0}
             onClick={inspectorBack}
           />
           <IconButton
             icon={ChevronRight}
-            label="Avanti (Alt+→)"
+            label={m.app.inspector.forward}
             disabled={index >= historyLength - 1}
             onClick={inspectorForward}
           />
           <span className="mx-2 min-w-0 flex-1 truncate text-xs font-semibold tracking-wider text-muted uppercase">
-            {current ? KIND_LABELS[current.kind] : 'Dettagli'}
+            {current ? KIND_LABELS[current.kind] : m.app.inspector.details}
           </span>
           <IconButton
             icon={Pin}
-            label={pinned ? 'Sblocca pannello' : 'Fissa pannello'}
+            label={pinned ? m.app.inspector.unpin : m.app.inspector.pin}
             active={pinned}
             onClick={toggleInspectorPin}
           />
-          <IconButton icon={X} label="Chiudi (Esc)" onClick={closeInspector} />
+          <IconButton icon={X} label={m.app.inspector.close} onClick={closeInspector} />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
@@ -99,10 +100,7 @@ export function InspectorDrawer() {
           ) : (
             <div className="flex flex-col items-center gap-3 pt-16 text-center text-sm text-muted">
               <MousePointerClick className="size-8 text-accent" aria-hidden />
-              <p className="max-w-64">
-                Clicca un incantesimo, un'arma, una maestria o un <code>[[collegamento]]</code> per vederne
-                qui i dettagli senza lasciare la pagina.
-              </p>
+              <p className="max-w-64">{m.app.inspector.empty}</p>
             </div>
           )}
         </div>

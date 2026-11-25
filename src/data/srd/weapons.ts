@@ -1,5 +1,6 @@
 import type { DamageType } from '@/domain/primitives';
 import type { MasteryKey, WeaponData, WeaponPropertyRef } from '@/domain/items';
+import { LOCALE } from '@/i18n/locale';
 
 /** Arma base della tabella SRD 5.2: precompila WeaponData quando si aggiunge un'arma all'inventario. */
 export interface WeaponBase {
@@ -38,7 +39,7 @@ const group = (category: WeaponBase['category'], type: WeaponBase['type'], rows:
   rows.map((r) => ({ ...r, category, type }));
 
 // prettier-ignore
-export const WEAPONS: WeaponBase[] = [
+const WEAPONS_IT: WeaponBase[] = [
   ...group('simple', 'melee', [
     { id: 'club', name: 'Randello', nameEn: 'Club', damage: { dice: '1d4', type: 'bludgeoning' }, properties: [P.light], mastery: 'slow', weightLb: 2, costCp: sp(1) },
     { id: 'dagger', name: 'Pugnale', nameEn: 'Dagger', damage: { dice: '1d4', type: 'piercing' }, properties: [P.finesse, P.light, P.thrown(20, 60)], mastery: 'nick', weightLb: 1, costCp: gp(2) },
@@ -86,6 +87,24 @@ export const WEAPONS: WeaponBase[] = [
     { id: 'pistol', name: 'Pistola', nameEn: 'Pistol', damage: { dice: '1d10', type: 'piercing' }, properties: [P.ammunition, P.range(30, 90), P.loading], mastery: 'vex', ammunition: 'Pallottola', weightLb: 3, costCp: gp(250) },
   ]),
 ];
+
+const AMMO_EN: Record<string, string> = {
+  Quadrello: 'Bolt',
+  Freccia: 'Arrow',
+  'Proiettile da fionda': 'Sling Bullet',
+  Ago: 'Needle',
+  Pallottola: 'Firearm Bullet',
+};
+
+/** Armi SRD nella lingua attiva (in inglese con i nomi ufficiali). */
+export const WEAPONS: WeaponBase[] =
+  LOCALE === 'en'
+    ? WEAPONS_IT.map((w) => ({
+        ...w,
+        name: w.nameEn,
+        ammunition: w.ammunition ? (AMMO_EN[w.ammunition] ?? w.ammunition) : undefined,
+      }))
+    : WEAPONS_IT;
 
 export const WEAPONS_BY_ID: ReadonlyMap<string, WeaponBase> = new Map(WEAPONS.map((w) => [w.id, w]));
 

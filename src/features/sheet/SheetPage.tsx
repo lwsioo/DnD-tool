@@ -13,6 +13,7 @@ import { FeaturesPanel } from './FeaturesPanel';
 import { IdentityHeader } from './IdentityHeader';
 import { NotesPanel } from './NotesPanel';
 import { SheetContext, type SheetContextValue } from './SheetContext';
+import { m } from '@/i18n';
 
 /** Scheda personaggio (regole 2024): tutti i valori derivati vengono dal motore di calcolo. */
 export function SheetPage() {
@@ -38,7 +39,7 @@ export function SheetPage() {
       {/* @container: il layout segue la larghezza dell'area centrale (cambia aprendo l'Inspector). */}
       <div className="@container mx-auto max-w-6xl space-y-4 p-4 lg:p-6">
         <div className="flex items-center justify-end gap-2">
-          <span className="text-xs text-muted">{edit ? 'Modalità Modifica' : 'Modalità Gioco'}</span>
+          <span className="text-xs text-muted">{edit ? m.sheet.editMode : m.sheet.playMode}</span>
           <Button
             size="sm"
             variant={edit ? 'primary' : 'secondary'}
@@ -46,7 +47,7 @@ export function SheetPage() {
             aria-pressed={edit}
             onClick={() => setEdit(!edit)}
           >
-            {edit ? 'Fine modifiche' : 'Modifica'}
+            {edit ? m.sheet.finishEditing : m.sheet.edit}
           </Button>
         </div>
 

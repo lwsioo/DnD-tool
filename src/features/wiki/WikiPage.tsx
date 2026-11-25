@@ -24,6 +24,7 @@ import {
 } from './categories';
 import { CreateEntryDialog } from './CreateEntryDialog';
 import { EntryPage } from './EntryPage';
+import { m } from '@/i18n';
 
 /** Campagna Wiki: /campagna/:campaignId/:categoria?/:voce? */
 export function WikiPage() {
@@ -56,12 +57,11 @@ function CampaignsHome({ notFound }: { notFound?: boolean }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
-      {notFound && <p className="text-sm text-danger">Campagna non trovata.</p>}
+      {notFound && <p className="text-sm text-danger">{m.wiki.campaignNotFound}</p>}
       <div className="space-y-1">
-        <h2 className="font-display text-2xl tracking-wide">Campagne</h2>
+        <h2 className="font-display text-2xl tracking-wide">{m.wiki.campaigns}</h2>
         <p className="text-sm text-muted">
-          Luoghi, fazioni, religioni, NPC e diario delle sessioni, collegati tra loro con{' '}
-          <code>[[Nome]]</code>.
+          {m.wiki.campaignsIntro}
         </p>
       </div>
       <ul className="space-y-2">
@@ -72,7 +72,7 @@ function CampaignsHome({ notFound }: { notFound?: boolean }) {
               {c.name}
             </Link>
             {active.character?.campaignId === c.id && (
-              <span className="text-xs text-muted">campagna di {active.character.identity.name}</span>
+              <span className="text-xs text-muted">{m.wiki.campaignOf(active.character.identity.name)}</span>
             )}
           </li>
         ))}
@@ -85,19 +85,19 @@ function CampaignsHome({ notFound }: { notFound?: boolean }) {
         }}
       >
         <input
-          aria-label="Nome della nuova campagna"
-          placeholder="Nome della nuova campagna"
+          aria-label={m.wiki.newCampaignName}
+          placeholder={m.wiki.newCampaignName}
           className={inputClass}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Button type="submit" variant="primary" icon={Plus} disabled={!name.trim()}>
-          Crea
+          {m.wiki.create}
         </Button>
       </form>
       {active.character && !active.character.campaignId && campaigns.length > 0 && (
         <p className="text-xs text-muted">
-          {active.character.identity.name} non è in nessuna campagna: aprine una e usa “Collega”.
+          {m.wiki.notInCampaign(active.character.identity.name)}
         </p>
       )}
     </div>
@@ -165,15 +165,15 @@ function CampaignLayout({
         toast({
           tone: 'success',
           message: linked
-            ? `${active.character!.identity.name} scollegato dalla campagna.`
-            : `${active.character!.identity.name} ora gioca in “${campaign.name}”.`,
+            ? m.wiki.unlinked(active.character!.identity.name)
+            : m.wiki.nowPlaying(active.character!.identity.name, campaign.name),
         }),
       );
 
   return (
     <div className="flex h-full min-h-0">
       <aside
-        aria-label="Navigazione campagna"
+        aria-label={m.wiki.campaignNav}
         className="flex w-64 shrink-0 flex-col border-r border-line bg-panel/60"
       >
         <div className="space-y-2 border-b border-line p-3">
@@ -187,7 +187,7 @@ function CampaignLayout({
             <h2 className="min-w-0 flex-1 truncate font-display text-lg tracking-wide">{campaign.name}</h2>
             <button
               type="button"
-              aria-label="Rinomina campagna"
+              aria-label={m.wiki.renameCampaign}
               className="text-muted hover:text-ink"
               onClick={() => setRenaming(true)}
             >
@@ -202,7 +202,7 @@ function CampaignLayout({
                 'flex items-center gap-1.5 text-xs',
                 linked ? 'text-ok' : 'text-accent hover:underline',
               )}
-              title={linked ? 'Clic per scollegare' : undefined}
+              title={linked ? m.wiki.clickToUnlink : undefined}
             >
               {linked ? (
                 <Link2 className="size-3.5" aria-hidden />
@@ -210,13 +210,13 @@ function CampaignLayout({
                 <Unlink className="size-3.5" aria-hidden />
               )}
               {linked
-                ? `${active.character.identity.name} è in questa campagna`
-                : `Collega ${active.character.identity.name}`}
+                ? m.wiki.inThisCampaign(active.character.identity.name)
+                : m.wiki.link(active.character.identity.name)}
             </button>
           )}
         </div>
 
-        <nav aria-label="Categorie" className="space-y-0.5 p-2">
+        <nav aria-label={m.wiki.categoriesNav} className="space-y-0.5 p-2">
           {CATEGORY_ORDER.map((c) => (
             <NavLink
               key={c}
@@ -239,8 +239,8 @@ function CampaignLayout({
 
         <div className="space-y-2 border-t border-line p-2">
           <input
-            aria-label="Filtra le voci"
-            placeholder="Filtra…"
+            aria-label={m.wiki.filterEntries}
+            placeholder={m.wiki.filterPlaceholder}
             className={cn(inputClass, 'py-1')}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -258,7 +258,7 @@ function CampaignLayout({
                     npcStatus === s ? 'border-accent text-accent' : 'border-line text-muted',
                   )}
                 >
-                  {s === 'all' ? 'Tutti' : NPC_STATUS_LABELS[s]}
+                  {s === 'all' ? m.wiki.all : NPC_STATUS_LABELS[s]}
                 </button>
               ))}
             </div>
@@ -266,10 +266,10 @@ function CampaignLayout({
         </div>
 
         <ul
-          aria-label={`Voci: ${CATEGORY_INFO[currentCategory].label}`}
+          aria-label={m.wiki.entriesOf(CATEGORY_INFO[currentCategory].label)}
           className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2"
         >
-          {list.length === 0 && <li className="px-2 text-xs text-muted">Nessuna voce.</li>}
+          {list.length === 0 && <li className="px-2 text-xs text-muted">{m.wiki.noEntries}</li>}
           {list.map((e) => (
             <li key={e.id}>
               <Link
@@ -292,7 +292,7 @@ function CampaignLayout({
             className="w-full"
             onClick={() => setCreating(true)}
           >
-            Nuova voce
+            {m.wiki.newEntry}
           </Button>
         </div>
       </aside>
@@ -342,9 +342,9 @@ function CategoryOverview({
       {campaign.description && <p className="text-sm text-muted">{campaign.description}</p>}
       {entries.length === 0 ? (
         <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">
-          Nessuna voce.{' '}
+          {m.wiki.noEntries}{' '}
           <button type="button" className="text-accent hover:underline" onClick={onCreate}>
-            Crea la prima
+            {m.wiki.createFirst}
           </button>
           .
         </p>
@@ -379,21 +379,21 @@ function RenameCampaignDialog({ campaign, onClose }: { campaign: Campaign; onClo
     <Dialog
       open
       onClose={onClose}
-      title="Rinomina campagna"
+      title={m.wiki.renameCampaign}
       size="sm"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Annulla
+            {m.common.cancel}
           </Button>
           <Button variant="primary" disabled={!name.trim()} onClick={() => void save()}>
-            Salva
+            {m.common.save}
           </Button>
         </>
       }
     >
       <input
-        aria-label="Nome della campagna"
+        aria-label={m.wiki.campaignName}
         data-autofocus
         className={inputClass}
         value={name}

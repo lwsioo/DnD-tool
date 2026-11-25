@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { CONDITION_KEYS, CONDITIONS, type ConditionKey } from '@/data/srd/conditions';
 import { useUiStore } from '@/stores/uiStore';
 import { useSheet } from './SheetContext';
+import { m } from '@/i18n';
 
 const isKnown = (k: string): k is ConditionKey => k in CONDITIONS;
 
@@ -13,9 +14,9 @@ export function ConditionsBar() {
   const available = CONDITION_KEYS.filter((k) => k !== 'exhaustion' && !active.includes(k));
 
   return (
-    <section aria-label="Condizioni" className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="text-[11px] font-semibold tracking-wider text-muted uppercase">Condizioni</span>
-      {active.length === 0 && <span className="text-xs text-muted">nessuna</span>}
+    <section aria-label={m.sheet.conditions} className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="text-[11px] font-semibold tracking-wider text-muted uppercase">{m.sheet.conditions}</span>
+      {active.length === 0 && <span className="text-xs text-muted">{m.sheet.noConditions}</span>}
       {active.map((k) => (
         <span
           key={k}
@@ -30,7 +31,7 @@ export function ConditionsBar() {
           </button>
           <button
             type="button"
-            aria-label={`Rimuovi ${isKnown(k) ? CONDITIONS[k].name : k}`}
+            aria-label={m.common.remove(isKnown(k) ? CONDITIONS[k].name : k)}
             className="rounded-full p-0.5 hover:bg-danger/20"
             onClick={() =>
               mutate((d) => void (d.combat.conditions = d.combat.conditions.filter((x) => x !== k)))
@@ -41,7 +42,7 @@ export function ConditionsBar() {
         </span>
       ))}
       <select
-        aria-label="Aggiungi condizione"
+        aria-label={m.sheet.addCondition}
         value=""
         onChange={(e) => {
           const k = e.target.value;
@@ -49,7 +50,7 @@ export function ConditionsBar() {
         }}
         className="rounded-full border border-dashed border-line bg-transparent px-2.5 py-0.5 text-xs text-muted"
       >
-        <option value="">+ condizione</option>
+        <option value="">{m.sheet.addConditionOption}</option>
         {available.map((k) => (
           <option key={k} value={k}>
             {CONDITIONS[k].name}

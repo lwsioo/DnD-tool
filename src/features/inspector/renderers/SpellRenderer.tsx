@@ -11,17 +11,18 @@ import {
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { MarkdownView } from '@/ui/MarkdownView';
 import { Article, NotFound, StatList } from './Article';
+import { m } from '@/i18n';
 
 export function SpellRenderer({ id }: { id: ID }) {
   const { units } = useAppSettings();
   const spell = useLiveQuery(async () => (await db.spells.get(id)) ?? null, [id]);
   if (spell === undefined) return null;
-  if (spell === null) return <NotFound what="Incantesimo" />;
+  if (spell === null) return <NotFound what={m.inspector.spell} />;
 
   const tags = [
-    spell.duration.concentration && 'Concentrazione',
-    spell.ritual && 'Rituale',
-    spell.components.m && 'Materiali',
+    spell.duration.concentration && m.inspector.concentration,
+    spell.ritual && m.inspector.ritual,
+    spell.components.m && m.inspector.materials,
   ].filter(Boolean);
 
   return (
@@ -31,11 +32,11 @@ export function SpellRenderer({ id }: { id: ID }) {
     >
       <StatList
         rows={[
-          ['Tempo di lancio', castingTimeText(spell.castingTime) + (spell.ritual ? ' o rituale' : '')],
-          ['Gittata', rangeText(spell.range, units)],
-          ['Componenti', componentsText(spell.components)],
-          ['Durata', durationText(spell.duration)],
-          spell.classes.length > 0 && ['Classi', spell.classes.join(', ')],
+          [m.inspector.castingTime, castingTimeText(spell.castingTime) + (spell.ritual ? m.inspector.orRitual : '')],
+          [m.inspector.range, rangeText(spell.range, units)],
+          [m.inspector.components, componentsText(spell.components)],
+          [m.inspector.duration, durationText(spell.duration)],
+          spell.classes.length > 0 && [m.inspector.classes, spell.classes.join(', ')],
         ]}
       />
       {tags.length > 0 && <p className="text-xs text-muted">{tags.join(' · ')}</p>}
@@ -43,7 +44,7 @@ export function SpellRenderer({ id }: { id: ID }) {
       {spell.higherLevels && (
         <div className="rounded-lg border border-accent/40 bg-accent-soft/40 p-3">
           <h3 className="mb-1 text-[11px] font-semibold tracking-wider text-accent uppercase">
-            {spell.level === 0 ? 'Potenziamento del trucchetto' : 'A livelli superiori'}
+            {spell.level === 0 ? m.inspector.cantripUpgrade : m.inspector.higherLevels}
           </h3>
           <MarkdownView compact>{spell.higherLevels}</MarkdownView>
         </div>

@@ -4,6 +4,7 @@ import type { Breakdown, RollModeInfo } from '@/engine/types';
 import { cn } from '@/lib/cn';
 import { formatBonus } from '@/lib/dice';
 import { HoverCard } from '@/ui/HoverCard';
+import { m } from '@/i18n';
 
 /** Contenuto del tooltip di scomposizione: "Mod. DES +2 · Competenza +3 = +5". */
 export function BreakdownContent({ breakdown, signed = true }: { breakdown: Breakdown; signed?: boolean }) {
@@ -16,7 +17,7 @@ export function BreakdownContent({ breakdown, signed = true }: { breakdown: Brea
         </div>
       ))}
       <div className="mt-1 flex justify-between gap-3 border-t border-line pt-1 font-semibold">
-        <span>Totale</span>
+        <span>{m.sheet.total}</span>
         <span className="tabular-nums">{signed ? formatBonus(breakdown.total) : breakdown.total}</span>
       </div>
     </div>
@@ -47,12 +48,8 @@ export function Explained({
 /** Badge vantaggio/svantaggio con l'elenco delle fonti. */
 export function RollBadge({ info }: { info: RollModeInfo }) {
   if (info.mode === 'normal') return null;
-  const label = { advantage: 'VANT', disadvantage: 'SVANT', cancelled: 'V/S' }[info.mode];
-  const title = {
-    advantage: 'Vantaggio',
-    disadvantage: 'Svantaggio',
-    cancelled: 'Vantaggio e svantaggio si annullano',
-  }[info.mode];
+  const label = m.sheet.badge[info.mode];
+  const title = m.sheet.badgeTitle[info.mode];
   return (
     <HoverCard
       content={
@@ -82,10 +79,7 @@ export function RollBadge({ info }: { info: RollModeInfo }) {
 }
 
 const PROF_TITLES: Record<ProfLevel, string> = {
-  0: 'Nessuna competenza',
-  0.5: 'Metà competenza',
-  1: 'Competenza',
-  2: 'Maestria',
+  ...m.sheet.profTitles,
 };
 
 /** Indicatore di competenza: ○ nessuna, ◐ metà, ● competente, ◉ maestria. Cliccabile in modalità Modifica. */
@@ -109,7 +103,7 @@ export function ProfMarker({
       )}
     />
   );
-  const title = `${PROF_TITLES[level]}${onCycle ? ' (clic per cambiare)' : ''}`;
+  const title = `${PROF_TITLES[level]}${onCycle ? m.sheet.clickToChange : ''}`;
   if (!onCycle) {
     return (
       <span
@@ -125,7 +119,7 @@ export function ProfMarker({
     <button
       type="button"
       title={title}
-      aria-label={`${subject}: ${PROF_TITLES[level]}. Cambia`}
+      aria-label={`${subject}: ${PROF_TITLES[level]}. ${m.sheet.change}`}
       onClick={onCycle}
       className="grid size-5 place-items-center rounded hover:bg-panel-2"
     >

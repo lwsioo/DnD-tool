@@ -10,6 +10,7 @@ import { useGlobalShortcuts } from '../shortcuts';
 import { InspectorDrawer } from './InspectorDrawer';
 import { LeftSidebar } from './LeftSidebar';
 import { TopBar } from './TopBar';
+import { m } from '@/i18n';
 
 /**
  * Layout a 3 pannelli:
@@ -38,7 +39,7 @@ export function AppShell() {
         }}
         className="sr-only z-[80] rounded-md bg-accent px-3 py-2 text-accent-ink focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
-        Vai al contenuto
+        {m.app.nav.skipToContent}
       </a>
       <div className="flex h-full overflow-hidden">
         {sidebarOpen && (

@@ -2,6 +2,7 @@ import type { Ability, SkillKey } from './abilities';
 import type { Effect } from './effects';
 import type { Feet, Formula, ID, Markdown } from './primitives';
 import type { Recharge } from './resources';
+import { pick } from '@/i18n/locale';
 
 /**
  * Origini del personaggio (regole 2024): specie, background e talenti.
@@ -130,15 +131,29 @@ export const emptyGrants = (): OriginGrants => ({
   heroicInspiration: false,
 });
 
-export const ALIGNMENTS = [
-  'Legale Buono',
-  'Neutrale Buono',
-  'Caotico Buono',
-  'Legale Neutrale',
-  'Neutrale',
-  'Caotico Neutrale',
-  'Legale Malvagio',
-  'Neutrale Malvagio',
-  'Caotico Malvagio',
-  'Non allineato',
-] as const;
+export const ALIGNMENTS: readonly string[] = pick(
+  [
+    'Legale Buono',
+    'Neutrale Buono',
+    'Caotico Buono',
+    'Legale Neutrale',
+    'Neutrale',
+    'Caotico Neutrale',
+    'Legale Malvagio',
+    'Neutrale Malvagio',
+    'Caotico Malvagio',
+    'Non allineato',
+  ],
+  [
+    'Lawful Good',
+    'Neutral Good',
+    'Chaotic Good',
+    'Lawful Neutral',
+    'Neutral',
+    'Chaotic Neutral',
+    'Lawful Evil',
+    'Neutral Evil',
+    'Chaotic Evil',
+    'Unaligned',
+  ],
+);

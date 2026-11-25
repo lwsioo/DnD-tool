@@ -5,6 +5,7 @@ import { formatBonus } from '@/lib/dice';
 import { NumberField, Select } from '@/ui/fields';
 import { Explained, RollBadge } from './parts';
 import { useSheet } from './SheetContext';
+import { m } from '@/i18n';
 
 function Stat({ label, children, hint }: { label: string; children: ReactNode; hint?: ReactNode }) {
   return (
@@ -24,25 +25,25 @@ export function CombatStrip() {
     .filter((k) => d.speed[k])
     .map(
       (k) =>
-        `${{ fly: 'Volo', swim: 'Nuoto', climb: 'Scalata', burrow: 'Scavo' }[k]} ${formatDistance(d.speed[k]!.total, units)}`,
+        `${m.sheet.speeds[k]} ${formatDistance(d.speed[k]!.total, units)}`,
     );
 
   return (
-    <section aria-label="Combattimento" className="flex flex-wrap gap-2">
-      <Stat label="Competenza">{formatBonus(d.pb)}</Stat>
+    <section aria-label={m.sheet.combat} className="flex flex-wrap gap-2">
+      <Stat label={m.sheet.proficiencyBonus}>{formatBonus(d.pb)}</Stat>
 
-      <Stat label="Iniziativa">
+      <Stat label={m.sheet.initiative}>
         <Explained breakdown={d.initiative} />
         <RollBadge info={d.initiative} />
       </Stat>
 
       <Stat
-        label="Classe Armatura"
-        hint={d.ac.override ? 'manuale' : d.ac.shieldIgnored ? 'scudo senza addestramento' : d.ac.basis}
+        label={m.sheet.armorClass}
+        hint={d.ac.override ? m.sheet.acManual : d.ac.shieldIgnored ? m.sheet.acShieldIgnored : d.ac.basis}
       >
         {edit ? (
           <NumberField
-            label="CA manuale (vuoto = automatica)"
+            label={m.sheet.acOverride}
             value={c.combat.acOverride ?? d.ac.total}
             min={0}
             max={40}
@@ -58,15 +59,15 @@ export function CombatStrip() {
             className="text-[11px] text-accent hover:underline"
             onClick={() => mutate((x) => void delete x.combat.acOverride)}
           >
-            auto
+            {m.sheet.auto}
           </button>
         )}
       </Stat>
 
-      <Stat label="Velocità" hint={otherSpeeds.join(' · ') || undefined}>
+      <Stat label={m.sheet.speed} hint={otherSpeeds.join(' · ') || undefined}>
         {edit ? (
           <NumberField
-            label="Velocità base in piedi"
+            label={m.sheet.baseSpeedFeet}
             value={c.combat.speed.walk}
             min={0}
             max={300}
@@ -80,14 +81,14 @@ export function CombatStrip() {
         )}
       </Stat>
 
-      <Stat label="Percezione passiva">
+      <Stat label={m.sheet.passivePerception}>
         <Explained breakdown={d.passive.perception} signed={false} />
       </Stat>
 
-      <Stat label="PF massimi" hint={c.combat.hp.maxMode === 'auto' ? 'calcolati' : 'manuali'}>
+      <Stat label={m.sheet.maxHp} hint={c.combat.hp.maxMode === 'auto' ? m.sheet.hpComputed : m.sheet.hpManual}>
         {edit && c.combat.hp.maxMode === 'manual' ? (
           <NumberField
-            label="PF massimi"
+            label={m.sheet.maxHp}
             value={c.combat.hp.maxManual ?? 0}
             min={0}
             max={999}
@@ -99,7 +100,7 @@ export function CombatStrip() {
         )}
         {edit && (
           <Select
-            label="Calcolo PF massimi"
+            label={m.sheet.hpMode}
             value={c.combat.hp.maxMode}
             className="w-auto py-0.5 text-xs"
             onValue={(v) =>
@@ -110,14 +111,14 @@ export function CombatStrip() {
               })
             }
             options={[
-              { value: 'auto', label: 'Auto' },
-              { value: 'manual', label: 'Manuale' },
+              { value: 'auto', label: m.sheet.modeAuto },
+              { value: 'manual', label: m.sheet.modeManual },
             ]}
           />
         )}
       </Stat>
 
-      <Stat label="Dadi vita">
+      <Stat label={m.sheet.hitDice}>
         <span className="text-base">
           {d.hitDice.length === 0
             ? '—'
@@ -126,12 +127,12 @@ export function CombatStrip() {
       </Stat>
 
       <Stat
-        label="Indebolimento"
-        hint={c.combat.exhaustion ? `−${2 * c.combat.exhaustion} ai d20` : undefined}
+        label={m.sheet.exhaustion}
+        hint={c.combat.exhaustion ? m.sheet.exhaustionHint(2 * c.combat.exhaustion) : undefined}
       >
         <NumberField
           stepper
-          label="Indebolimento"
+          label={m.sheet.exhaustion}
           value={c.combat.exhaustion}
           min={0}
           max={6}

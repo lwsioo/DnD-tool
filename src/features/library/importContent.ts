@@ -13,6 +13,9 @@ import {
   isFiveEtoolsContent,
   spellLookupKey,
 } from './fiveEtoolsContent';
+import { m } from '@/i18n';
+
+const L = m.misc.library;
 
 /**
  * Import di contenuti da più file in una volta: file 5etools (spell, race, background, feat, item)
@@ -60,7 +63,7 @@ export async function planContentImport(files: Array<{ name: string; text: strin
     try {
       data = JSON.parse(f.text);
     } catch {
-      warnings.push(`${f.name}: non è un JSON valido.`);
+      warnings.push(L.warnNotJson(f.name));
       continue;
     }
     if (
@@ -76,16 +79,16 @@ export async function planContentImport(files: Array<{ name: string; text: strin
           codexItems.push(...parsed.data.libraryItems);
         } else {
           warnings.push(
-            `${f.name}: è un personaggio o un backup completo, usa «Importa file…» nelle Impostazioni.`,
+            L.warnIsBackup(f.name),
           );
         }
       } catch (e) {
-        warnings.push(`${f.name}: ${e instanceof ImportError ? e.message : 'file Codex non valido.'}`);
+        warnings.push(`${f.name}: ${e instanceof ImportError ? e.message : L.warnInvalid}`);
       }
       continue;
     }
     if (isFiveEtoolsContent(data)) raws.push(data);
-    else warnings.push(`${f.name}: nessuna sezione riconosciuta (spell, race, background, feat, item).`);
+    else warnings.push(L.warnNoSection(f.name));
   }
 
   const dbItems = await db.libraryItems.toArray();

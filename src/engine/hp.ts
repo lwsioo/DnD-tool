@@ -3,6 +3,7 @@ import type { Die } from '@/domain/primitives';
 import { addParts } from './effects';
 import type { FormulaVars } from './formula';
 import type { ActiveEffect, Breakdown, Part } from './types';
+import { m } from '@/i18n';
 
 /** Media fissa per livello: metà dado + 1 (d8 → 5, d10 → 6). */
 export const averageHitDie = (die: Die) => die / 2 + 1;
@@ -22,7 +23,7 @@ export function computeMaxHp(
   const hp = c.combat.hp;
   if (hp.maxMode === 'manual') {
     const v = Math.max(0, hp.maxManual ?? 0);
-    return { total: v, parts: [{ label: 'Valore manuale', value: v }] };
+    return { total: v, parts: [{ label: m.engine.manualValue, value: v }] };
   }
 
   const perLevel: number[] = [];
@@ -38,11 +39,11 @@ export function computeMaxHp(
   if (perLevel.length === 0) return { total: 0, parts: [] };
 
   const [first = 0, ...rest] = perLevel;
-  const parts: Part[] = [{ label: 'Dado vita al 1° livello', value: first }];
-  if (rest.length) parts.push({ label: 'Livelli successivi', value: rest.reduce((a, b) => a + b, 0) });
-  if (conMod) parts.push({ label: `Mod. COS × ${perLevel.length}`, value: conMod * perLevel.length });
+  const parts: Part[] = [{ label: m.engine.hpFirstLevel, value: first }];
+  if (rest.length) parts.push({ label: m.engine.hpLaterLevels, value: rest.reduce((a, b) => a + b, 0) });
+  if (conMod) parts.push({ label: m.engine.hpCon(perLevel.length), value: conMod * perLevel.length });
   const minimumFix = perLevel.reduce((a, v) => a + Math.max(0, 1 - (v + conMod)), 0);
-  if (minimumFix) parts.push({ label: 'Minimo 1 PF per livello', value: minimumFix });
+  if (minimumFix) parts.push({ label: m.engine.hpMinimum, value: minimumFix });
   parts.push(...addParts(effects, ['hp.max'], vars));
   return {
     total: Math.max(

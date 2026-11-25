@@ -3,6 +3,7 @@ import type { Character, CharacterSpell, CharacterSpellStatus } from '@/domain/c
 import type { ID } from '@/domain/primitives';
 import type { Spell } from '@/domain/spells';
 import type { SlotsResult } from '@/engine/spellSlots';
+import { m } from '@/i18n';
 
 /** Modo in cui si lancia un incantesimo. */
 export type CastMode =
@@ -31,13 +32,13 @@ export function castOptions(
   freeMax: number,
 ): CastOption[] {
   if (spell.level === 0)
-    return [{ mode: { kind: 'cantrip' }, label: 'Trucchetto', castLevel: 0, available: true }];
+    return [{ mode: { kind: 'cantrip' }, label: m.grimoire.castOptions.cantrip, castLevel: 0, available: true }];
   const out: CastOption[] = [];
   if (cs.freeUses) {
     const left = freeMax - cs.freeUses.used;
     out.push({
       mode: { kind: 'free' },
-      label: `Lancio gratuito (${Math.max(0, left)}/${freeMax})`,
+      label: m.grimoire.castOptions.free(Math.max(0, left), freeMax),
       castLevel: cs.freeCastLevel ?? spell.level,
       available: left > 0,
     });
@@ -46,7 +47,7 @@ export function castOptions(
     if (s.level < spell.level || s.max === 0) continue;
     out.push({
       mode: { kind: 'slot', level: s.level },
-      label: `Slot di ${s.level}° livello (${s.max - s.used}/${s.max})`,
+      label: m.grimoire.castOptions.slot(s.level, s.max - s.used, s.max),
       castLevel: s.level,
       available: s.used < s.max,
     });
@@ -54,7 +55,7 @@ export function castOptions(
   if (slots.pact && slots.pact.slotLevel >= spell.level) {
     out.push({
       mode: { kind: 'pact' },
-      label: `Slot del Patto di ${slots.pact.slotLevel}° (${slots.pact.max - slots.pact.used}/${slots.pact.max})`,
+      label: m.grimoire.castOptions.pact(slots.pact.slotLevel, slots.pact.max - slots.pact.used, slots.pact.max),
       castLevel: slots.pact.slotLevel,
       available: slots.pact.used < slots.pact.max,
     });
@@ -62,7 +63,7 @@ export function castOptions(
   if (spell.ritual) {
     out.push({
       mode: { kind: 'ritual' },
-      label: 'Come rituale (+10 minuti, senza slot)',
+      label: m.grimoire.castOptions.ritual,
       castLevel: spell.level,
       available: true,
     });

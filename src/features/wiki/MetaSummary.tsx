@@ -5,8 +5,10 @@ import type { ID } from '@/domain/primitives';
 import type { WikiEntry } from '@/domain/wiki';
 import { InspectorChip } from '@/ui/InspectorChip';
 import { NPC_ATTITUDE_LABELS, NPC_STATUS_LABELS } from './categories';
+import { m } from '@/i18n';
+import { LANG_TAG } from '@/i18n/locale';
 
-const dateFormat = new Intl.DateTimeFormat('it-IT', { dateStyle: 'long' });
+const dateFormat = new Intl.DateTimeFormat(LANG_TAG, { dateStyle: 'long' });
 
 function EntryChips({ ids, names }: { ids: ID[]; names: Map<ID, string> }) {
   const known = ids.filter((id) => names.has(id));
@@ -53,42 +55,42 @@ export function MetaSummary({ entry }: { entry: WikiEntry }) {
 
   switch (entry.category) {
     case 'npc':
-      rows.push(['Stato', NPC_STATUS_LABELS[entry.meta.status]]);
-      rows.push(['Attitudine', NPC_ATTITUDE_LABELS[entry.meta.attitude]]);
-      text('Ruolo', entry.meta.role);
-      text('Specie', entry.meta.species);
-      refs('Fazioni', entry.meta.factionIds);
-      refs('Luogo', entry.meta.locationId ? [entry.meta.locationId] : []);
+      rows.push([m.wiki.fields.status, NPC_STATUS_LABELS[entry.meta.status]]);
+      rows.push([m.wiki.fields.attitude, NPC_ATTITUDE_LABELS[entry.meta.attitude]]);
+      text(m.wiki.fields.role, entry.meta.role);
+      text(m.wiki.fields.species, entry.meta.species);
+      refs(m.wiki.fields.factions, entry.meta.factionIds);
+      refs(m.wiki.fields.location, entry.meta.locationId ? [entry.meta.locationId] : []);
       break;
     case 'location':
-      text('Regione', entry.meta.region);
-      text('Tipo', entry.meta.locationType);
-      refs('Parte di', entry.meta.parentLocationId ? [entry.meta.parentLocationId] : []);
-      refs('Fazioni presenti', entry.meta.factionIds);
+      text(m.wiki.fields.region, entry.meta.region);
+      text(m.wiki.fields.type, entry.meta.locationType);
+      refs(m.wiki.fields.partOf, entry.meta.parentLocationId ? [entry.meta.parentLocationId] : []);
+      refs(m.wiki.fields.factionsPresent, entry.meta.factionIds);
       break;
     case 'faction':
-      refs('Capi', entry.meta.leaderIds);
-      refs('Sede', entry.meta.headquartersId ? [entry.meta.headquartersId] : []);
-      refs('Religione', entry.meta.religionId ? [entry.meta.religionId] : []);
-      text('Obiettivi', entry.meta.goals);
-      text('Atteggiamento', entry.meta.attitude);
+      refs(m.wiki.fields.leaders, entry.meta.leaderIds);
+      refs(m.wiki.fields.headquarters, entry.meta.headquartersId ? [entry.meta.headquartersId] : []);
+      refs(m.wiki.fields.religion, entry.meta.religionId ? [entry.meta.religionId] : []);
+      text(m.wiki.fields.goals, entry.meta.goals);
+      text(m.wiki.fields.attitudeShort, entry.meta.attitude);
       break;
     case 'religion':
-      text('Divinità', entry.meta.deity);
-      text('Domini', entry.meta.domains.join(', ') || undefined);
-      text('Simbolo', entry.meta.symbol);
-      text('Allineamento', entry.meta.alignment);
+      text(m.wiki.fields.deity, entry.meta.deity);
+      text(m.wiki.fields.domains, entry.meta.domains.join(', ') || undefined);
+      text(m.wiki.fields.symbol, entry.meta.symbol);
+      text(m.wiki.fields.alignment, entry.meta.alignment);
       break;
     case 'session': {
-      rows.push(['Sessione', `n. ${entry.meta.number}`]);
+      rows.push([m.wiki.fields.session, m.wiki.fields.sessionNo(entry.meta.number)]);
       const d = new Date(entry.meta.date);
-      text('Data', Number.isNaN(d.getTime()) ? entry.meta.date : dateFormat.format(d));
-      text('Data nel mondo', entry.meta.inGameDate);
-      text('Partecipanti', participants.join(', ') || undefined);
+      text(m.wiki.fields.date, Number.isNaN(d.getTime()) ? entry.meta.date : dateFormat.format(d));
+      text(m.wiki.fields.inGameDate, entry.meta.inGameDate);
+      text(m.wiki.fields.participants, participants.join(', ') || undefined);
       break;
     }
   }
-  if (entry.tags.length) rows.push(['Tag', entry.tags.map((t) => `#${t}`).join(' ')]);
+  if (entry.tags.length) rows.push([m.wiki.fields.tags, entry.tags.map((t) => `#${t}`).join(' ')]);
   if (rows.length === 0) return null;
 
   return (

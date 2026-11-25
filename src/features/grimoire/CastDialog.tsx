@@ -10,6 +10,7 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { castOptions, type CastMode } from './castActions';
 import { spellLevelLine } from './spellText';
+import { m } from '@/i18n';
 
 interface CastDialogProps {
   spell: Spell;
@@ -45,12 +46,12 @@ export function CastDialog({ spell, cs, derived, currentConcentration, onCast, o
     <Dialog
       open
       onClose={onClose}
-      title={`Lancia: ${spell.name}`}
+      title={m.grimoire.cast(spell.name)}
       size="sm"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Annulla
+            {m.common.cancel}
           </Button>
           <Button
             variant="primary"
@@ -59,7 +60,7 @@ export function CastDialog({ spell, cs, derived, currentConcentration, onCast, o
             disabled={!chosen?.available || derived.cannotCastSpells}
             onClick={() => chosen && onCast(chosen.mode, chosen.castLevel)}
           >
-            Lancia
+            {m.grimoire.castButton}
           </Button>
         </>
       }
@@ -68,18 +69,15 @@ export function CastDialog({ spell, cs, derived, currentConcentration, onCast, o
         <p className="text-xs text-muted">
           {spellLevelLine(spell)}
           {source && (
-            <>
-              {' '}
-              · {source.label}: CD {source.dc.total}, attacco {formatBonus(source.attack.total)}
-            </>
+            m.grimoire.sourceStats(source.label, source.dc.total, formatBonus(source.attack.total))
           )}
         </p>
 
         {options.length === 0 ? (
-          <p className="text-danger">Nessuno slot di livello sufficiente per questo incantesimo.</p>
+          <p className="text-danger">{m.grimoire.noSlot}</p>
         ) : (
           <fieldset className="space-y-1.5">
-            <legend className="sr-only">Come lanciarlo</legend>
+            <legend className="sr-only">{m.grimoire.howToCast}</legend>
             {options.map((o, i) => (
               <label
                 key={i}
@@ -105,11 +103,11 @@ export function CastDialog({ spell, cs, derived, currentConcentration, onCast, o
           <p className="rounded-md border border-line bg-bg/40 px-3 py-2">
             {spell.level === 0 ? (
               <>
-                Al tuo livello: <strong>{dice}</strong>
+                {m.grimoire.atYourLevel} <strong>{dice}</strong>
               </>
             ) : (
               <>
-                Slot superiore: <strong>+{dice}</strong>
+                {m.grimoire.higherSlot} <strong>+{dice}</strong>
               </>
             )}
           </p>
@@ -117,16 +115,16 @@ export function CastDialog({ spell, cs, derived, currentConcentration, onCast, o
 
         {spell.duration.concentration && (
           <p className="text-xs text-muted">
-            Richiede concentrazione
+            {m.grimoire.needsConcentration}
             {currentConcentration && (
-              <span className="text-danger"> · interrompe quella su {currentConcentration}</span>
+              <span className="text-danger">{m.grimoire.breaksConcentration(currentConcentration)}</span>
             )}
             .
           </p>
         )}
         {derived.cannotCastSpells && (
           <p className="text-xs text-danger">
-            Indossi un’armatura senza addestramento: non puoi lanciare incantesimi.
+            {m.grimoire.cannotCast}
           </p>
         )}
       </div>

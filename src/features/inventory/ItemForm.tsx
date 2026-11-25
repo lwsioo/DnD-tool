@@ -28,6 +28,7 @@ import type { Units } from '@/lib/units';
 import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { FieldLabel, inputClass, Select } from '@/ui/fields';
+import { m as msg } from '@/i18n';
 
 const defaultWeapon = (): WeaponData => ({
   category: 'simple',
@@ -129,12 +130,12 @@ function LibraryItemPicker({ onPick }: { onPick: (t: ItemTemplate, libraryRef: s
   const templates = (items ?? []).flatMap((i) => (i.kind === 'item' ? [{ id: i.id, data: i.data }] : []));
   if (!templates.length) return null;
   return (
-    <FieldLabel label={`Oppure dalla libreria (${templates.length} oggetti)`}>
+    <FieldLabel label={msg.inventory.fromLibrary(templates.length)}>
       <input
-        aria-label="Oggetto dalla libreria"
+        aria-label={msg.inventory.libraryItem}
         list={listId}
         className={inputClass}
-        placeholder="Cerca per nome…"
+        placeholder={msg.inventory.searchByName}
         onChange={(e) => {
           const hit = templates.find((t) => libraryLabel(t.data) === e.target.value);
           if (hit) onPick(hit.data, hit.id);
@@ -188,28 +189,28 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
     <Dialog
       open
       onClose={onClose}
-      title={item ? `Modifica: ${item.name}` : 'Nuovo oggetto'}
+      title={item ? msg.inventory.editItem(item.name) : msg.inventory.newItem}
       size="lg"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Annulla
+            {msg.common.cancel}
           </Button>
           <Button
             variant="primary"
             disabled={!draft.name.trim()}
             onClick={() => onSave({ ...draft, name: draft.name.trim() })}
           >
-            Salva
+            {msg.common.save}
           </Button>
         </>
       }
     >
       <div key={formKey} className="space-y-4">
         {!item && (
-          <FieldLabel label="Parti da un oggetto SRD (facoltativo)">
+          <FieldLabel label={msg.inventory.fromSrd}>
             <select
-              aria-label="Oggetto SRD"
+              aria-label={msg.inventory.srdItem}
               className={inputClass}
               value=""
               onChange={(e) => {
@@ -218,15 +219,15 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
                 setFormKey((k) => k + 1);
               }}
             >
-              <option value="">— Scegli un’arma o un’armatura —</option>
-              <optgroup label="Armi">
+              <option value="">{msg.inventory.chooseSrd}</option>
+              <optgroup label={msg.inventory.weapons}>
                 {WEAPONS.map((x) => (
                   <option key={x.id} value={`weapon:${x.id}`}>
                     {x.name}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Armature e scudi">
+              <optgroup label={msg.inventory.armorAndShields}>
                 {ARMOR.map((x) => (
                   <option key={x.id} value={`armor:${x.id}`}>
                     {x.name}
@@ -254,18 +255,18 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
         )}
 
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr_5rem]">
-          <FieldLabel label="Nome">
+          <FieldLabel label={msg.inventory.name}>
             <input
-              aria-label="Nome"
+              aria-label={msg.inventory.name}
               className={inputClass}
               value={draft.name}
               data-autofocus
               onChange={(e) => set({ name: e.target.value })}
             />
           </FieldLabel>
-          <FieldLabel label="Tipo">
+          <FieldLabel label={msg.inventory.type}>
             <Select
-              label="Tipo di oggetto"
+              label={msg.inventory.itemType}
               value={draft.kind}
               onValue={changeKind}
               options={(Object.keys(ITEM_KIND_LABELS) as ItemKind[]).map((k) => ({
@@ -274,76 +275,76 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
               }))}
             />
           </FieldLabel>
-          <FieldLabel label="Quantità">
-            <IntInput label="Quantità" value={draft.quantity} onValue={(quantity) => set({ quantity })} />
+          <FieldLabel label={msg.inventory.quantity}>
+            <IntInput label={msg.inventory.quantity} value={draft.quantity} onValue={(quantity) => set({ quantity })} />
           </FieldLabel>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <FieldLabel label={`Peso unitario (${weightUnit})`}>
+          <FieldLabel label={msg.inventory.unitWeight(weightUnit)}>
             <DecimalInput
-              label="Peso unitario"
+              label={msg.inventory.unitWeightAria}
               value={draft.weightLb === undefined ? undefined : toDisplayWeight(draft.weightLb, units)}
               onValue={(v) => set({ weightLb: v === undefined ? undefined : fromDisplayWeight(v, units) })}
             />
           </FieldLabel>
-          <FieldLabel label="Valore unitario (mo)">
+          <FieldLabel label={msg.inventory.unitValue}>
             <DecimalInput
-              label="Valore in monete d'oro"
+              label={msg.inventory.unitValueAria}
               value={draft.valueCp === undefined ? undefined : draft.valueCp / 100}
               onValue={(v) => set({ valueCp: v === undefined ? undefined : Math.round(v * 100) })}
             />
           </FieldLabel>
-          <FieldLabel label="Sintonia">
+          <FieldLabel label={msg.inventory.attunementField}>
             <Select
-              label="Sintonia"
+              label={msg.inventory.attunementField}
               value={draft.attunement ?? 'none'}
               onValue={(v) => set({ attunement: v === 'none' ? undefined : v })}
               options={[
-                { value: 'none', label: 'Non richiesta' },
-                { value: 'required', label: 'Richiesta (non sintonizzato)' },
-                { value: 'attuned', label: 'Sintonizzato' },
+                { value: 'none', label: msg.inventory.attunementOptions.none },
+                { value: 'required', label: msg.inventory.attunementOptions.required },
+                { value: 'attuned', label: msg.inventory.attunementOptions.attuned },
               ]}
             />
           </FieldLabel>
         </div>
 
         {w && (
-          <Group title="Arma">
+          <Group title={msg.inventory.weapon}>
             <div className="grid gap-3 sm:grid-cols-4">
-              <FieldLabel label="Categoria">
+              <FieldLabel label={msg.inventory.category}>
                 <Select
-                  label="Categoria arma"
+                  label={msg.inventory.weaponCategory}
                   value={w.category}
                   onValue={(category) => setWeapon({ category })}
                   options={[
-                    { value: 'simple', label: 'Semplice' },
-                    { value: 'martial', label: 'Da guerra' },
+                    { value: 'simple', label: msg.inventory.simple },
+                    { value: 'martial', label: msg.inventory.martial },
                   ]}
                 />
               </FieldLabel>
-              <FieldLabel label="Tipo">
+              <FieldLabel label={msg.inventory.type}>
                 <Select
-                  label="Mischia o distanza"
+                  label={msg.inventory.meleeOrRanged}
                   value={w.type}
                   onValue={(type) => setWeapon({ type })}
                   options={[
-                    { value: 'melee', label: 'Mischia' },
-                    { value: 'ranged', label: 'A distanza' },
+                    { value: 'melee', label: msg.inventory.melee },
+                    { value: 'ranged', label: msg.inventory.ranged },
                   ]}
                 />
               </FieldLabel>
-              <FieldLabel label="Danni">
+              <FieldLabel label={msg.inventory.damage}>
                 <input
-                  aria-label="Dado di danno"
+                  aria-label={msg.inventory.damageDie}
                   className={inputClass}
                   value={w.damage.dice}
                   onChange={(e) => setWeapon({ damage: { ...w.damage, dice: e.target.value } })}
                 />
               </FieldLabel>
-              <FieldLabel label="Tipo di danno">
+              <FieldLabel label={msg.inventory.damageType}>
                 <Select
-                  label="Tipo di danno"
+                  label={msg.inventory.damageType}
                   value={w.damage.type}
                   onValue={(type: DamageType) => setWeapon({ damage: { ...w.damage, type } })}
                   options={(Object.keys(DAMAGE_TYPE_LABELS) as DamageType[]).map((t) => ({
@@ -371,7 +372,7 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
                         {(['normal', 'long'] as const).map((field) => (
                           <input
                             key={field}
-                            aria-label={`${WEAPON_PROPERTIES[k].name}: gittata ${field === 'normal' ? 'normale' : 'lunga'} (${distanceUnit})`}
+                            aria-label={msg.inventory.rangeAria(WEAPON_PROPERTIES[k].name, field === 'long', distanceUnit)}
                             inputMode="decimal"
                             className="w-14 rounded border border-line bg-bg px-1 text-center"
                             defaultValue={toDisplayDistance(prop[field], units)}
@@ -393,7 +394,7 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
                     )}
                     {prop && k === 'versatile' && (
                       <input
-                        aria-label="Dado a due mani"
+                        aria-label={msg.inventory.versatileDie}
                         placeholder="1d10"
                         className="w-14 rounded border border-line bg-bg px-1 text-center text-xs"
                         value={w.versatileDice ?? ''}
@@ -405,13 +406,13 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
               })}
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <FieldLabel label="Maestria">
+              <FieldLabel label={msg.inventory.mastery}>
                 <Select
-                  label="Maestria"
+                  label={msg.inventory.mastery}
                   value={w.mastery ?? ''}
                   onValue={(m) => setWeapon({ mastery: (m || undefined) as MasteryKey | undefined })}
                   options={[
-                    { value: '', label: 'Nessuna' },
+                    { value: '', label: msg.inventory.none },
                     ...(Object.keys(WEAPON_MASTERIES) as MasteryKey[]).map((m) => ({
                       value: m,
                       label: WEAPON_MASTERIES[m].name,
@@ -419,21 +420,21 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
                   ]}
                 />
               </FieldLabel>
-              <FieldLabel label="Bonus magico">
+              <FieldLabel label={msg.inventory.magicBonus}>
                 <IntInput
-                  label="Bonus magico arma"
+                  label={msg.inventory.weaponMagic}
                   value={w.magicBonus}
                   min={-5}
                   onValue={(magicBonus) => setWeapon({ magicBonus })}
                 />
               </FieldLabel>
-              <FieldLabel label="Caratteristica">
+              <FieldLabel label={msg.inventory.ability}>
                 <Select
-                  label="Caratteristica d'attacco"
+                  label={msg.inventory.attackAbility}
                   value={w.abilityOverride ?? ''}
                   onValue={(v) => setWeapon({ abilityOverride: (v || undefined) as Ability | undefined })}
                   options={[
-                    { value: '', label: 'Automatica' },
+                    { value: '', label: msg.inventory.automatic },
                     ...ABILITIES.map((ab) => ({ value: ab, label: ABILITY_LABELS[ab].long })),
                   ]}
                 />
@@ -443,11 +444,11 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
         )}
 
         {a && (
-          <Group title="Armatura">
+          <Group title={msg.inventory.armor}>
             <div className="grid gap-3 sm:grid-cols-4">
-              <FieldLabel label="Categoria">
+              <FieldLabel label={msg.inventory.category}>
                 <Select
-                  label="Categoria armatura"
+                  label={msg.inventory.armorCategory}
                   value={a.category}
                   onValue={(category) =>
                     setArmor({
@@ -456,25 +457,25 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
                     })
                   }
                   options={[
-                    { value: 'light', label: 'Leggera' },
-                    { value: 'medium', label: 'Media' },
-                    { value: 'heavy', label: 'Pesante' },
+                    { value: 'light', label: msg.inventory.light },
+                    { value: 'medium', label: msg.inventory.medium },
+                    { value: 'heavy', label: msg.inventory.heavy },
                   ]}
                 />
               </FieldLabel>
-              <FieldLabel label="CA base">
-                <IntInput label="CA base" value={a.baseAc} onValue={(baseAc) => setArmor({ baseAc })} />
+              <FieldLabel label={msg.inventory.baseAc}>
+                <IntInput label={msg.inventory.baseAc} value={a.baseAc} onValue={(baseAc) => setArmor({ baseAc })} />
               </FieldLabel>
-              <FieldLabel label="Bonus magico">
+              <FieldLabel label={msg.inventory.magicBonus}>
                 <IntInput
-                  label="Bonus magico armatura"
+                  label={msg.inventory.armorMagic}
                   value={a.magicBonus}
                   onValue={(magicBonus) => setArmor({ magicBonus })}
                 />
               </FieldLabel>
-              <FieldLabel label="Forza richiesta">
+              <FieldLabel label={msg.inventory.strRequired}>
                 <IntInput
-                  label="Forza richiesta"
+                  label={msg.inventory.strRequired}
                   value={a.strRequirement ?? 0}
                   onValue={(v) => setArmor({ strRequirement: v || undefined })}
                 />
@@ -486,16 +487,16 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
                 checked={a.stealthDisadvantage}
                 onChange={(e) => setArmor({ stealthDisadvantage: e.target.checked })}
               />
-              Svantaggio a Furtività
+              {msg.inventory.stealthDisadvantage}
             </label>
           </Group>
         )}
 
         {draft.shield && (
-          <Group title="Scudo">
-            <FieldLabel label="Bonus alla CA" className="max-w-40">
+          <Group title={msg.inventory.shield}>
+            <FieldLabel label={msg.inventory.acBonus} className="max-w-40">
               <IntInput
-                label="Bonus scudo alla CA"
+                label={msg.inventory.shieldAcBonus}
                 value={draft.shield.acBonus}
                 onValue={(acBonus) => set({ shield: { acBonus } })}
               />
@@ -504,21 +505,21 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
         )}
 
         {draft.container && (
-          <Group title="Contenitore">
+          <Group title={msg.inventory.container}>
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={draft.container.weightless}
                 onChange={(e) => set({ container: { ...draft.container!, weightless: e.target.checked } })}
               />
-              Il contenuto non pesa (es. Borsa Conservante)
+              {msg.inventory.weightless}
             </label>
           </Group>
         )}
 
-        <FieldLabel label="Descrizione (Markdown)">
+        <FieldLabel label={msg.inventory.description}>
           <textarea
-            aria-label="Descrizione"
+            aria-label={msg.inventory.descriptionAria}
             className={inputClass}
             rows={3}
             value={draft.description ?? ''}
@@ -526,7 +527,7 @@ export function ItemForm({ item, units, vars, onSave, onClose }: ItemFormProps) 
           />
         </FieldLabel>
 
-        <Group title="Effetti quando equipaggiato">
+        <Group title={msg.inventory.effectsWhenEquipped}>
           <EffectsEditor effects={draft.effects} vars={vars} onChange={(effects) => set({ effects })} />
         </Group>
       </div>

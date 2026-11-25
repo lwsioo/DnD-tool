@@ -12,6 +12,9 @@ import {
   SpeciesFields,
   type BackgroundValue,
 } from './OriginFields';
+import { m } from '@/i18n';
+
+const O = m.misc.origins;
 
 type Mutate = (recipe: (d: Character) => void) => void;
 
@@ -42,15 +45,15 @@ export function SpeciesDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Specie"
+      title={O.species}
       size="lg"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Annulla
+            {m.common.cancel}
           </Button>
           <Button variant="primary" onClick={apply} disabled={missingOption} data-autofocus>
-            Applica
+            {m.common.apply}
           </Button>
         </>
       }
@@ -58,10 +61,9 @@ export function SpeciesDialog({
       <div className="space-y-3">
         <SpeciesFields lib={lib} value={value} onChange={(p) => setValue((v) => ({ ...v, ...p }))} />
         <p className="text-xs text-muted">
-          Applicando, i tratti, le competenze e le fonti di incantesimi aggiunti dalla specie precedente
-          vengono sostituiti. Ciò che hai inserito a mano resta.
+          {O.speciesNote}
         </p>
-        {missingOption && <p className="text-xs text-danger">Scegli {def!.choice!.label.toLowerCase()}.</p>}
+        {missingOption && <p className="text-xs text-danger">{O.chooseX(def!.choice!.label.toLowerCase())}</p>}
       </div>
     </Dialog>
   );
@@ -103,15 +105,15 @@ export function BackgroundDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Background"
+      title={O.background0}
       size="lg"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Annulla
+            {m.common.cancel}
           </Button>
           <Button variant="primary" onClick={apply} data-autofocus>
-            Applica
+            {m.common.apply}
           </Button>
         </>
       }
@@ -128,19 +130,19 @@ export function BackgroundDialog({
           {def && (
             <>
               <div className="space-y-1">
-                <p className="text-xs text-muted">Aumenti di caratteristica</p>
+                <p className="text-xs text-muted">{O.abilityIncreases}</p>
                 <BonusFields
                   allowed={def.abilities}
                   mode={mode}
                   picks={picks}
-                  onChange={(m, p) => {
-                    setMode(m);
+                  onChange={(md, p) => {
+                    setMode(md);
                     setPicks(p);
                   }}
                 />
                 {!complete && (
                   <p className="text-xs text-muted">
-                    Finché gli aumenti non sono completi non ne viene applicato nessuno.
+                    {O.incomplete}
                   </p>
                 )}
               </div>
@@ -149,8 +151,7 @@ export function BackgroundDialog({
           )}
         </BackgroundFields>
         <p className="text-xs text-muted">
-          Applicando, bonus, competenze e talento del background precedente vengono sostituiti.
-          L’equipaggiamento già nell’inventario non viene toccato.
+          {O.backgroundNote}
         </p>
       </div>
     </Dialog>

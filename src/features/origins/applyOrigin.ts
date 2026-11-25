@@ -12,6 +12,9 @@ import {
 import { itemFromSrd, emptyItem } from '@/features/inventory/srdItems';
 import { WEAPONS_BY_ID } from '@/data/srd/weapons';
 import { newId } from '@/lib/id';
+import { m } from '@/i18n';
+
+const O = m.misc.origins;
 
 /**
  * Applicazione di specie, background e talenti d'origine alla scheda.
@@ -126,7 +129,7 @@ function traitFeature(
   addFeature(c, g, {
     category,
     name: t.name,
-    origin: t.minLevel ? `${origin} · dal ${t.minLevel}° livello` : origin,
+    origin: t.minLevel ? O.fromLevel(origin, t.minLevel) : origin,
     description: t.description,
     effects: (t.effects ?? []).map((e) => ({ ...e, id: newId() })),
     uses: t.uses ? { ...t.uses, used: 0, pinned: true } : undefined,
@@ -151,7 +154,7 @@ export function applyFeat(
   g: OriginGrants,
   feat: FeatDef,
   choices: FeatChoices = {},
-  origin = 'Talento d’origine',
+  origin = O.originFeat,
 ): void {
   const list = choices.spellList ?? feat.spellLists?.[0];
   const name = feat.spellLists?.length && list ? `${feat.name} (${list})` : feat.name;
@@ -251,13 +254,13 @@ export function applyBackground(
       ...choices.feat,
       spellList: choices.feat?.spellList ?? impliedSpellList(feat, def.featName),
     };
-    applyFeat(c, g, feat, featChoices, `Background: ${def.name}`);
+    applyFeat(c, g, feat, featChoices, O.background(def.name));
   } else if (def.featName || def.featId) {
     addFeature(c, g, {
       category: 'feat',
       name: def.featName ?? def.featId!,
-      origin: `Background: ${def.name}`,
-      description: 'Talento d’origine del background: aggiungi i dettagli dal manuale.',
+      origin: O.background(def.name),
+      description: O.featPlaceholder,
     });
   }
 

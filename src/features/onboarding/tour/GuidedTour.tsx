@@ -7,6 +7,9 @@ import { CARD_WIDTH, measure, placeCard, veil, type Rect } from './placement';
 /** rgba esplicito: alcuni browser non disegnano il nero semitrasparente in oklab generato da Tailwind. */
 const VEIL_COLOR = 'rgba(8, 8, 12, 0.62)';
 import type { TourStep } from './steps';
+import { m } from '@/i18n';
+
+const T = m.onboarding.tour;
 
 interface GuidedTourProps {
   steps: TourStep[];
@@ -78,21 +81,21 @@ export function GuidedTour({ steps, onDone }: GuidedTourProps) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Visita guidata"
+        aria-label={T.region}
         className="absolute space-y-3 rounded-xl border border-line bg-panel p-4 shadow-2xl transition-all duration-200"
         style={{ top: pos.top, left: pos.left, width: CARD_WIDTH }}
       >
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-              Passo {index + 1} di {steps.length}
+              {T.step(index + 1, steps.length)}
             </p>
             <h2 className="font-display text-lg tracking-wide">{step.title}</h2>
           </div>
           <button
             type="button"
             onClick={onDone}
-            aria-label="Salta la visita"
+            aria-label={T.skipX}
             className="rounded-md p-1 text-muted hover:bg-panel-2 hover:text-ink"
           >
             <X className="size-4" aria-hidden />
@@ -111,12 +114,12 @@ export function GuidedTour({ steps, onDone }: GuidedTourProps) {
 
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onDone}>
-            Salta
+            {T.skip}
           </Button>
           <span className="flex-1" />
           {index > 0 && (
             <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={back}>
-              Indietro
+              {T.back}
             </Button>
           )}
           <Button
@@ -127,7 +130,7 @@ export function GuidedTour({ steps, onDone }: GuidedTourProps) {
             data-autofocus
             autoFocus
           >
-            {last ? 'Inizia' : index === 0 ? 'Iniziamo' : 'Avanti'}
+            {last ? T.start : index === 0 ? T.begin : T.next}
           </Button>
         </div>
       </div>

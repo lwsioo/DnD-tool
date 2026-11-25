@@ -2,6 +2,7 @@ import { Component, lazy, Suspense, useState, type ComponentType, type ReactNode
 import { useUiStore } from '@/stores/uiStore';
 import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
+import { m as msg } from '@/i18n';
 
 type PaletteProps = { onClose: () => void };
 const loadPalette = () =>
@@ -56,20 +57,20 @@ class PaletteErrorBoundary extends Component<BoundaryProps, { error: Error | nul
       <Dialog
         open
         onClose={this.props.onClose}
-        title="Ricerca non disponibile"
+        title={msg.search.unavailable}
         size="sm"
         footer={
           <>
             <Button variant="ghost" onClick={() => window.location.reload()}>
-              Ricarica la pagina
+              {msg.search.reload}
             </Button>
             <Button variant="primary" onClick={this.props.onRetry} data-autofocus>
-              Riprova
+              {msg.search.retry}
             </Button>
           </>
         }
       >
-        <p className="text-sm">La ricerca non si è aperta per un errore:</p>
+        <p className="text-sm">{msg.search.errorIntro}</p>
         <p className="mt-2 rounded-md border border-danger/40 bg-danger/10 p-2 font-mono text-xs break-words text-danger">
           {this.state.error.message || String(this.state.error)}
         </p>

@@ -7,6 +7,7 @@ import { formatDamage } from '@/lib/dice';
 import { addParts, rollModeFor } from './effects';
 import type { FormulaVars } from './formula';
 import type { ActiveEffect, Breakdown, Part, RollModeInfo } from './types';
+import { m } from '@/i18n';
 
 export interface AttackStat {
   itemId: ID;
@@ -64,10 +65,10 @@ export function computeAttack(
   const kind = w.type === 'ranged' ? 'attack.ranged' : 'attack.melee';
   const notes: string[] = [];
 
-  const hitParts: Part[] = [{ label: `Mod. ${ABILITY_LABELS[ability].short}`, value: mod }];
-  if (proficient) hitParts.push({ label: 'Competenza', value: pb });
-  else notes.push('Nessuna competenza con quest’arma');
-  if (w.magicBonus) hitParts.push({ label: 'Bonus magico', value: w.magicBonus });
+  const hitParts: Part[] = [{ label: m.engine.mod(ABILITY_LABELS[ability].short), value: mod }];
+  if (proficient) hitParts.push({ label: m.engine.proficiency, value: pb });
+  else notes.push(m.engine.noWeaponProficiency);
+  if (w.magicBonus) hitParts.push({ label: m.engine.magicBonus, value: w.magicBonus });
   const hitTargets = ['attack.all', kind, 'd20.all'] as const;
   hitParts.push(...addParts(effects, hitTargets, vars));
 
@@ -78,9 +79,9 @@ export function computeAttack(
   // Attacco extra con arma Leggera nella mano secondaria: niente modificatore positivo.
   const abilityDamage = w.hand === 'off' ? Math.min(0, mod) : mod;
   if (w.hand === 'off' && mod > 0)
-    notes.push('Mano secondaria: il modificatore positivo non si aggiunge ai danni');
-  if (abilityDamage) dmgParts.push({ label: `Mod. ${ABILITY_LABELS[ability].short}`, value: abilityDamage });
-  if (w.magicBonus) dmgParts.push({ label: 'Bonus magico', value: w.magicBonus });
+    notes.push(m.engine.offHand);
+  if (abilityDamage) dmgParts.push({ label: m.engine.mod(ABILITY_LABELS[ability].short), value: abilityDamage });
+  if (w.magicBonus) dmgParts.push({ label: m.engine.magicBonus, value: w.magicBonus });
   dmgParts.push(...addParts(effects, [w.type === 'ranged' ? 'damage.ranged' : 'damage.melee'], vars));
   const modifier = dmgParts.reduce((a, p) => a + p.value, 0);
 

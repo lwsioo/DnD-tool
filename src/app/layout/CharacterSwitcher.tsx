@@ -5,6 +5,7 @@ import type { Character } from '@/domain/character';
 import { useActiveCharacter, useCharacterList } from '@/hooks/useActiveCharacter';
 import { cn } from '@/lib/cn';
 import { classSummary } from '@/features/character/useCurrentCharacter';
+import { m } from '@/i18n';
 
 function Avatar({ character }: { character?: Character }) {
   const initial = character?.identity.name.trim().charAt(0).toUpperCase() || '?';
@@ -43,7 +44,7 @@ export function CharacterSwitcher() {
   const hasCharacters = (characters?.length ?? 0) > 0;
 
   return (
-    <section aria-label="Personaggio attivo" className="space-y-1.5">
+    <section aria-label={m.app.switcher.region} className="space-y-1.5">
       <div ref={rootRef} className="relative">
         <button
           type="button"
@@ -51,13 +52,13 @@ export function CharacterSwitcher() {
           aria-haspopup="listbox"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          title={hasCharacters ? 'Cambia personaggio' : 'Nessun personaggio: creane uno'}
+          title={hasCharacters ? m.app.switcher.change : m.app.switcher.none}
           className="flex w-full items-center gap-2.5 rounded-lg border border-line bg-panel-2 p-2 text-left transition-colors hover:border-accent/50 disabled:cursor-not-allowed disabled:hover:border-line"
         >
           <Avatar character={current} />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">
-              {current?.identity.name || 'Nessun personaggio'}
+              {current?.identity.name || m.app.switcher.noCharacter}
             </span>
             <span className="block truncate text-xs text-muted">{current ? classSummary(current) : '—'}</span>
           </span>
@@ -67,7 +68,7 @@ export function CharacterSwitcher() {
         {open && characters && (
           <ul
             role="listbox"
-            aria-label="Personaggi"
+            aria-label={m.app.switcher.list}
             className="absolute inset-x-0 top-full z-40 mt-1 max-h-72 overflow-y-auto rounded-lg border border-line bg-panel p-1 shadow-xl"
           >
             {characters.map((c) => {
@@ -86,7 +87,7 @@ export function CharacterSwitcher() {
                     )}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm">{c.identity.name || 'Senza nome'}</span>
+                      <span className="block truncate text-sm">{c.identity.name || m.app.switcher.unnamed}</span>
                       <span className="block truncate text-xs text-muted">{classSummary(c)}</span>
                     </span>
                     {selected && <Check className="size-4 text-accent" aria-hidden />}
@@ -102,7 +103,7 @@ export function CharacterSwitcher() {
         to="/benvenuto"
         className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-accent hover:bg-panel-2"
       >
-        <Plus className="size-3.5" aria-hidden /> Nuovo personaggio
+        <Plus className="size-3.5" aria-hidden /> {m.app.nav.newCharacter}
       </NavLink>
     </section>
   );

@@ -5,14 +5,14 @@ import type { ArmorTraining } from '@/domain/character';
 import { InspectorChip } from '@/ui/InspectorChip';
 import { TagInput } from '@/ui/TagInput';
 import { useSheet } from './SheetContext';
+import { masteryLimit } from './masteries';
+import { MasteryPicker } from './MasteryPicker';
+import { m } from '@/i18n';
 
 const ARMOR_LABELS: Record<ArmorTraining, string> = {
-  light: 'Leggere',
-  medium: 'Medie',
-  heavy: 'Pesanti',
-  shield: 'Scudi',
+  ...m.sheet.armorTraining,
 };
-const WEAPON_GROUP_LABELS: Record<string, string> = { simple: 'Armi semplici', martial: 'Armi da guerra' };
+const WEAPON_GROUP_LABELS: Record<string, string> = { simple: m.sheet.simpleWeapons, martial: m.sheet.martialWeapons };
 const weaponLabel = (w: string) => WEAPON_GROUP_LABELS[w] ?? WEAPONS_BY_ID.get(w)?.name ?? w;
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -36,7 +36,7 @@ export function ProficienciesPanel() {
 
   return (
     <div className="divide-y divide-line">
-      <Row label="Armature">
+      <Row label={m.sheet.armor}>
         {edit ? (
           <div className="flex flex-wrap gap-3">
             {(Object.keys(ARMOR_LABELS) as ArmorTraining[]).map((a) => (
@@ -57,7 +57,7 @@ export function ProficienciesPanel() {
         )}
       </Row>
 
-      <Row label="Armi">
+      <Row label={m.sheet.weapons}>
         {edit ? (
           <div className="space-y-2">
             <div className="flex flex-wrap gap-3">
@@ -75,8 +75,8 @@ export function ProficienciesPanel() {
               ))}
             </div>
             <TagInput
-              label="Armi specifiche"
-              placeholder="Arma specifica (id SRD o nome) e Invio"
+              label={m.sheet.specificWeapons}
+              placeholder={m.sheet.specificWeaponsPlaceholder}
               values={p.weapons.filter((w) => w !== 'simple' && w !== 'martial')}
               suggestions={WEAPONS.map((w) => w.id)}
               onChange={(vals) =>
@@ -95,24 +95,13 @@ export function ProficienciesPanel() {
         )}
       </Row>
 
-      <Row label="Maestrie nelle armi">
+      <Row label={m.sheet.weaponMasteries}>
         {edit ? (
-          <select
-            multiple
-            aria-label="Armi con Maestria sbloccata"
+          <MasteryPicker
             value={c.weaponMasteries}
-            onChange={(e) => {
-              const values = [...e.target.selectedOptions].map((o) => o.value);
-              mutate((d) => void (d.weaponMasteries = values));
-            }}
-            className="h-32 w-full rounded-md border border-line bg-bg p-1 text-sm"
-          >
-            {WEAPONS.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+            limit={masteryLimit(c)}
+            onChange={(values) => mutate((d) => void (d.weaponMasteries = values))}
+          />
         ) : c.weaponMasteries.length ? (
           <span className="flex flex-wrap gap-1.5">
             {c.weaponMasteries.map((id) => (
@@ -126,10 +115,10 @@ export function ProficienciesPanel() {
         )}
       </Row>
 
-      <Row label="Strumenti">
+      <Row label={m.sheet.tools}>
         {edit ? (
           <TagInput
-            label="Strumenti"
+            label={m.sheet.tools}
             values={p.tools}
             onChange={(v) => mutate((d) => void (d.proficiencies.tools = v))}
           />
@@ -138,10 +127,10 @@ export function ProficienciesPanel() {
         )}
       </Row>
 
-      <Row label="Lingue">
+      <Row label={m.sheet.languages}>
         {edit ? (
           <TagInput
-            label="Lingue"
+            label={m.sheet.languages}
             values={p.languages}
             suggestions={[...STANDARD_LANGUAGES, ...RARE_LANGUAGES]}
             onChange={(v) => mutate((d) => void (d.proficiencies.languages = v))}

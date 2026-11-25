@@ -19,6 +19,7 @@ import type { Spell } from '@/domain/spells';
 import { convertFiveEtoolsSpell, entriesToMarkdown } from '@/features/grimoire/import/fiveEtools';
 import { newId } from '@/lib/id';
 import { normalizeKey } from '@/lib/normalizeKey';
+import { m as msg } from '@/i18n';
 
 /**
  * Conversione dei file JSON di 5etools (specie, background, talenti, oggetti, incantesimi)
@@ -122,11 +123,7 @@ function featReference(key: string): { base: string; variant?: string } {
   return { base, variant };
 }
 
-const TOOL_ANY: Record<string, string> = {
-  anyArtisansTool: 'Strumenti da artigiano (a scelta)',
-  anyGamingSet: 'Set da gioco (a scelta)',
-  anyMusicalInstrument: 'Strumento musicale (a scelta)',
-};
+const TOOL_ANY: Record<string, string> = msg.misc.library.toolAny;
 
 function equipmentLine(e: unknown): EquipmentLine | { gold: number } | null {
   if (typeof e === 'string') {
@@ -227,24 +224,24 @@ function prerequisiteText(raw: unknown): string | undefined {
     if (!isObj(p)) return [];
     const out: string[] = [];
     const level = isObj(p.level) ? num(p.level.level) : num(p.level);
-    if (level) out.push(`Livello ${level}+`);
+    if (level) out.push(msg.misc.library.level(level));
     for (const a of arr(p.ability)) {
       if (isObj(a))
         out.push(
           Object.entries(a)
             .map(([k, v]) => `${k.toUpperCase()} ${v}+`)
-            .join(' o '),
+            .join(msg.misc.library.or),
         );
     }
     if (p.spellcasting || p.spellcasting2020 || p.spellcastingFeature)
-      out.push('Capacità di lanciare incantesimi');
+      out.push(msg.misc.library.spellcasting);
     if (arr(p.feat).length)
       out.push(
         arr(p.feat)
           .map((f) => titleCase(bare(String(f))))
           .join(', '),
       );
-    if (arr(p.proficiency).length) out.push('Competenza richiesta (vedi descrizione)');
+    if (arr(p.proficiency).length) out.push(msg.misc.library.proficiencyReq);
     return out;
   });
   return parts.length ? parts.join('; ') : undefined;
@@ -455,7 +452,10 @@ function lookupClassNames(raw: unknown): string[] {
         isObj(c) && typeof c.name === 'string' ? [c.name] : typeof c === 'string' ? [c] : [],
       )
     : isObj(raw)
-      ? Object.values(raw).flatMap((bySource) => (isObj(bySource) ? Object.keys(bySource) : []))
+      ? Object.values(raw).flatMap((bySource) =>
+          // `true` = classe ufficiale; gli oggetti ({ definedInSources }) sono classi di altri prodotti.
+          isObj(bySource) ? Object.keys(bySource).filter((k) => bySource[k] === true) : [],
+        )
       : [];
   return [...new Set(names.map((n) => CLASS_BY_EN.get(n.toLowerCase()) ?? n))];
 }

@@ -10,6 +10,7 @@ altro dispositivo si esportano e importano file JSON.
 
 ## Indice
 
+- [App per Windows (.exe)](#app-per-windows-exe)
 - [Installazione](#installazione)
 - [Avvio](#avvio)
 - [Usarla come app (anche offline)](#usarla-come-app-anche-offline)
@@ -35,6 +36,44 @@ altro dispositivo si esportano e importano file JSON.
 - [Contenuti e licenza](#contenuti-e-licenza)
 
 ---
+
+## App per Windows (.exe)
+
+Il modo più comodo per usare Codex su un PC Windows: un installatore che crea l'icona sul desktop e nel menu Start.
+
+**Installare**: esegui `release/Codex-Setup-<versione>.exe` (vedi sotto come crearlo). Codex non è firmato digitalmente,
+quindi Windows può mostrare «Windows ha protetto il PC»: clicca **Ulteriori informazioni → Esegui comunque**. Si
+disinstalla da Impostazioni di Windows → App.
+
+Aprendo Codex compare un menù:
+
+1. **Apri l'app su questo dispositivo** — Codex si apre in una sua finestra, come un programma, anche senza internet.
+2. **Apri l'app su altri dispositivi** — telefoni, tablet e altri PC **collegati alla stessa rete** (stesso Wi‑Fi)
+   aprono Codex dal browser con l'indirizzo mostrato (es. `http://192.168.1.88:47474`) o inquadrando il **QR code**.
+   - Al primo uso Windows chiede il permesso del firewall: consenti l'accesso alle **reti private**.
+   - Tieni aperta la finestra del menù: chiudendola, o con **Interrompi la condivisione**, gli altri dispositivi non
+     possono più aprire Codex. Con **Apri anche su questo PC** usi l'app anche dal computer intanto.
+   - **Ogni dispositivo ha i suoi dati** (personaggi, wiki…), salvati nel proprio browser. Per passarli da un
+     dispositivo all'altro usa l'export/import JSON o il pacchetto contenuti.
+   - Sui dispositivi in rete l'app non funziona offline e non si può «installare» dal browser (servirebbe HTTPS): resta
+     comunque utilizzabile finché il PC condivide.
+
+Nella cartella d'installazione (di solito `%LOCALAPPDATA%\Programs\Codex`) c'è anche **`resourcesToImport`**, con i
+file JSON pronti da importare (incantesimi, classi degli incantesimi, specie, background, talenti, oggetti): in Codex vai
+in **Impostazioni → Contenuti → Importa contenuti…**, apri quella cartella e selezionali tutti insieme. Sono quelli
+presenti in `resourcesToImport/` del progetto al momento di `npm run dist:win`.
+
+I dati dell'app desktop sono **separati** da quelli usati finora nel browser (`localhost:5173` o `4173`): per portarli,
+fai un backup completo dal browser (Impostazioni → Backup) e importalo nell'app.
+
+**Creare l'installer** (dalla cartella del progetto, dopo `npm install`):
+
+```powershell
+npm run dist:win
+```
+
+Il file `Codex-Setup-<versione>.exe` (~120 MB, perché include il motore di Chromium) compare nella cartella `release/`.
+Per provare l'app senza installarla: `npm run desktop`.
 
 ## Installazione
 
@@ -176,6 +215,8 @@ Sempre visibile, qualunque pagina tu stia guardando.
 - **Riposo Breve**: scegli quanti Dadi Vita spendere (tiro automatico o valore a mano) e vedi cosa si ricarica.
 - **Riposo Lungo**: anteprima di tutto ciò che viene ripristinato. Dopo ogni riposo puoi premere **Annulla** nella
   notifica.
+- **Dopo il riposo** Codex chiede «Vuoi cambiare qualcosa?»: porta agli incantesimi preparati nel Grimorio, cambia le
+  **Maestrie nelle armi** lì stesso (col limite della tua classe e livello) o apre la scheda in Modifica.
 
 ### Il grimorio
 
@@ -185,7 +226,8 @@ Sempre visibile, qualunque pagina tu stia guardando.
   classe del personaggio) → **Aggiungi**. Se la libreria è vuota, prima importa gli incantesimi (vedi
   [Importare contenuti](#importare-contenuti-da-5etools)) oppure creane uno con **Nuovo**.
 - **Stato** di ogni incantesimo: conosciuto, preparato, sempre pronto, o gratuito (es. 1 volta per Riposo Lungo).
-- **Filtri**: livello, stato, Concentrazione / Rituale / componente Materiale, testo.
+- **Filtri**: livello, stato, Concentrazione / Rituale / componente Materiale, classe (se gli incantesimi sono di più
+  liste, es. con la multiclasse), testo.
 - **Lancia**: scegli lo slot (anche più alto per il potenziamento), lo slot viene speso, i dadi sono già scalati e, se
   serve, la concentrazione viene impostata (con avviso se ne stai già mantenendo un'altra).
 - Clic sul nome di un incantesimo per leggerlo per intero nel pannello a destra.
@@ -193,6 +235,9 @@ Sempre visibile, qualunque pagina tu stia guardando.
 ### L'inventario
 
 - **Monete**: modifica rapida, **cambio** tra tagli e **pagamento con resto** automatico.
+- **Vendere**: il pulsante con le monete accanto a un oggetto propone il prezzo (metà del valore per l'equipaggiamento,
+  pieno per gemme e tesori), che puoi cambiare insieme alla quantità; confermando, l'oggetto esce dall'inventario e le
+  monete si aggiungono da sole. Si può annullare dalla notifica. Il contenuto di un contenitore venduto resta tuo.
 - **Aggiungi oggetto**: da zero, partendo da un'**arma o armatura SRD** (già pronta con danni, proprietà e maestria), o
   **dalla libreria** (oggetti importati: digita il nome e scegli dall'elenco).
 - **Contenitori**: trascina gli oggetti dentro zaini e borse; il peso si somma da solo (la Borsa Conservante conta solo
@@ -379,9 +424,11 @@ dell'app e riaprila.
 | `npm run lint`       | ESLint                                                                                                 |
 | `npm run typecheck`  | Controllo dei tipi TypeScript                                                                          |
 | `npm run format`     | Formatta il codice con Prettier                                                                        |
+| `npm run desktop`    | Build e avvio dell'app desktop (Electron) senza installarla                                            |
+| `npm run dist:win`   | Crea l'installer Windows in `release/`                                                                 |
 
 **Tecnologie**: React 19, TypeScript, Vite, Tailwind CSS 4, Dexie (IndexedDB), Zustand, Zod, CodeMirror 6, MiniSearch,
-dnd-kit, vite-plugin-pwa.
+dnd-kit, vite-plugin-pwa; app desktop con Electron + electron-builder (cartella `electron/`).
 
 ```
 src/

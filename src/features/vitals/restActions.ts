@@ -3,6 +3,7 @@ import { snapshotsRepo } from '@/db/repos/snapshots';
 import type { ID } from '@/domain/primitives';
 import { longRest, shortRest, type RestSummary, type ShortRestInput } from '@/engine/rests';
 import { trackSave } from '@/stores/saveStatus';
+import { m } from '@/i18n';
 
 export interface RestResult {
   summary: RestSummary;
@@ -22,7 +23,7 @@ export async function performRest(
   input: ShortRestInput = { hitDice: [] },
 ): Promise<RestResult> {
   return trackSave(async () => {
-    const snapshotId = await snapshotsRepo.take(id, kind === 'short' ? 'Riposo breve' : 'Riposo lungo');
+    const snapshotId = await snapshotsRepo.take(id, kind === 'short' ? m.vitals.shortRestLower : m.vitals.longRestLower);
     let summary: RestSummary | undefined;
     await charactersRepo.transform(id, (c) => {
       const r =
@@ -37,13 +38,13 @@ export async function performRest(
 /** Testo breve del riepilogo per la notifica. */
 export function summaryText(kind: 'short' | 'long', s: RestSummary): string {
   const parts = [
-    s.hpRecovered > 0 && `+${s.hpRecovered} PF`,
-    s.hitDiceSpent > 0 && `${s.hitDiceSpent} dadi vita spesi`,
-    s.hitDiceRecovered > 0 && `${s.hitDiceRecovered} dadi vita recuperati`,
-    s.slotsRecovered > 0 && `${s.slotsRecovered} slot recuperati`,
-    s.pactSlotsRecovered > 0 && `${s.pactSlotsRecovered} slot del Patto`,
-    s.recharged.length > 0 && `ricaricati: ${s.recharged.join(', ')}`,
-    s.exhaustionReduced && 'Indebolimento −1',
+    s.hpRecovered > 0 && m.vitals.summary.hp(s.hpRecovered),
+    s.hitDiceSpent > 0 && m.vitals.summary.hitDiceSpent(s.hitDiceSpent),
+    s.hitDiceRecovered > 0 && m.vitals.summary.hitDiceRecovered(s.hitDiceRecovered),
+    s.slotsRecovered > 0 && m.vitals.summary.slots(s.slotsRecovered),
+    s.pactSlotsRecovered > 0 && m.vitals.summary.pact(s.pactSlotsRecovered),
+    s.recharged.length > 0 && m.vitals.summary.recharged(s.recharged.join(', ')),
+    s.exhaustionReduced && m.vitals.summary.exhaustion,
   ].filter(Boolean);
-  return `${kind === 'short' ? 'Riposo breve' : 'Riposo lungo'} completato${parts.length ? ': ' + parts.join(' · ') : '.'}`;
+  return m.vitals.summary.done(kind === 'short' ? m.vitals.shortRestLower : m.vitals.longRestLower, parts.join(' · '));
 }

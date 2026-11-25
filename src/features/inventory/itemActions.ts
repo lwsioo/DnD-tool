@@ -69,6 +69,50 @@ export function removeItem(d: Draft<Character>, itemId: ID): InventoryItem[] {
   return removed;
 }
 
+/**
+ * Prezzo di vendita proposto, in monete di rame: per le regole l'equipaggiamento si vende a metà del
+ * suo valore, mentre tesori (gemme, oggetti d'arte, merci) valgono il prezzo pieno.
+ */
+export function defaultSalePriceCp(item: Pick<InventoryItem, 'kind' | 'valueCp'>, quantity: number): number {
+  const unit = item.valueCp ?? 0;
+  return Math.round((item.kind === 'treasure' ? unit : unit / 2) * quantity);
+}
+
+/** "12,5", "12.5" o "1.250,5" mo → mr; null se non è un numero valido. */
+export const parseGp = (text: string): number | null => {
+  const t = text.trim();
+  if (!t) return null;
+  // Con la virgola i punti sono separatori delle migliaia; senza, il punto è il decimale.
+  const n = Number(t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+};
+
+/** Aggiunge un incasso alle monete, scomposto in mo, ma e mr (senza toccare le monete già possedute). */
+export function addCoins(d: Draft<Character>, cp: number) {
+  const total = Math.max(0, Math.round(cp));
+  d.inventory.currency.gp += Math.floor(total / 100);
+  d.inventory.currency.sp += Math.floor((total % 100) / 10);
+  d.inventory.currency.cp += total % 10;
+}
+
+/**
+ * Vende `quantity` pezzi di un oggetto e incassa `priceCp`. Vendendo tutto l'oggetto sparisce;
+ * se è un contenitore, il suo contenuto resta nell'inventario (passa al contenitore superiore).
+ */
+export function sellItem(d: Draft<Character>, itemId: ID, quantity: number, priceCp: number) {
+  const item = d.inventory.items.find((i) => i.id === itemId);
+  if (!item) return;
+  const sold = Math.min(Math.max(1, Math.floor(quantity)), item.quantity);
+  if (sold < item.quantity) {
+    item.quantity -= sold;
+  } else {
+    for (const child of d.inventory.items) if (child.parentId === item.id) child.parentId = item.parentId;
+    d.inventory.items = d.inventory.items.filter((i) => i.id !== itemId);
+    for (const i of d.inventory.items) if (i.weapon?.ammoItemId === itemId) delete i.weapon.ammoItemId;
+  }
+  addCoins(d, priceCp);
+}
+
 /** Ordine di visualizzazione: albero con figli subito dopo il padre. */
 export function treeOrder(items: InventoryItem[]): Array<{ item: InventoryItem; depth: number }> {
   const byParent = new Map<ID | null, InventoryItem[]>();

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "codex-dev",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": [
+        "C:\\Users\\Alessio\\Documents\\GitHub\\DnD-tool\\node_modules\\vite\\bin\\vite.js",
+        "C:\\Users\\Alessio\\Documents\\GitHub\\DnD-tool",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "port": 5180
+    }
+  ]
+}

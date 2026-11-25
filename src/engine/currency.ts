@@ -1,4 +1,5 @@
 import type { Currency } from '@/domain/items';
+import { m } from '@/i18n';
 
 export type Coin = keyof Currency;
 
@@ -43,8 +44,8 @@ export type CurrencyResult = { ok: true; currency: Currency } | { ok: false; err
  */
 export function exchange(cur: Currency, from: Coin, to: Coin, amount: number): CurrencyResult {
   const n = Math.floor(amount);
-  if (n <= 0) return { ok: false, error: 'Quantità non valida' };
-  if (cur[from] < n) return { ok: false, error: 'Monete insufficienti' };
+  if (n <= 0) return { ok: false, error: m.engine.invalidQuantity };
+  if (cur[from] < n) return { ok: false, error: m.engine.notEnoughCoins };
   const value = n * CP_VALUE[from];
   const converted = Math.floor(value / CP_VALUE[to]);
   const change = optimize(
@@ -64,7 +65,7 @@ export function exchange(cur: Currency, from: Coin, to: Coin, amount: number): C
 export function pay(cur: Currency, costCp: number): CurrencyResult {
   const cost = Math.max(0, Math.floor(costCp));
   const total = totalCp(cur);
-  if (cost > total) return { ok: false, error: 'Monete insufficienti' };
+  if (cost > total) return { ok: false, error: m.engine.notEnoughCoins };
   let rest = total - cost;
   const kept = emptyCurrency();
   for (const c of COINS_DESC) {

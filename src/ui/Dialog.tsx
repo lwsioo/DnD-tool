@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { IconButton } from './IconButton';
+import { m } from '@/i18n';
 
 interface DialogProps {
   open: boolean;
@@ -80,7 +81,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
           <h2 id={titleId} className="flex-1 font-display text-lg tracking-wide">
             {title}
           </h2>
-          <IconButton icon={X} label="Chiudi" onClick={onClose} />
+          <IconButton icon={X} label={m.common.close} onClick={onClose} />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>}

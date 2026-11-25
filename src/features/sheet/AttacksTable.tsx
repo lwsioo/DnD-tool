@@ -8,6 +8,7 @@ import { useUiStore } from '@/stores/uiStore';
 import { HoverCard } from '@/ui/HoverCard';
 import { Explained, Panel, RollBadge, BreakdownContent } from './parts';
 import { useSheet } from './SheetContext';
+import { m } from '@/i18n';
 
 /** Attacchi con le armi equipaggiate. L'equipaggiamento si gestisce dall'Inventario. */
 export function AttacksTable() {
@@ -17,12 +18,12 @@ export function AttacksTable() {
   const attacks = d.attacks.filter((a) => a.equipped);
 
   return (
-    <Panel title="Attacchi">
+    <Panel title={m.sheet.attacks}>
       {attacks.length === 0 ? (
         <p className="text-sm text-muted">
-          Nessuna arma equipaggiata. Aggiungile ed equipaggiale dall’
+          {m.sheet.noWeapons}
           <Link to={`/pg/${c.id}/inventario`} className="text-accent hover:underline">
-            Inventario
+            {m.sheet.inventoryLink}
           </Link>
           .
         </p>
@@ -31,11 +32,11 @@ export function AttacksTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-[11px] text-muted">
-                <th className="pb-1 font-medium">Arma</th>
-                <th className="pb-1 font-medium">Colpire</th>
-                <th className="pb-1 font-medium">Danni</th>
-                <th className="pb-1 font-medium">Proprietà</th>
-                <th className="pb-1 font-medium">Maestria</th>
+                <th className="pb-1 font-medium">{m.sheet.colWeapon}</th>
+                <th className="pb-1 font-medium">{m.sheet.colHit}</th>
+                <th className="pb-1 font-medium">{m.sheet.colDamage}</th>
+                <th className="pb-1 font-medium">{m.sheet.colProperties}</th>
+                <th className="pb-1 font-medium">{m.sheet.colMastery}</th>
               </tr>
             </thead>
             <tbody>
@@ -55,8 +56,8 @@ export function AttacksTable() {
                       </button>
                       <div className="text-[11px] text-muted">
                         {ABILITY_LABELS[a.ability].short}
-                        {a.reach !== undefined && ` · portata ${formatDistance(a.reach, units)}`}
-                        {!a.proficient && ' · senza competenza'}
+                        {a.reach !== undefined && m.sheet.reach(formatDistance(a.reach, units))}
+                        {!a.proficient && m.sheet.notProficient}
                       </div>
                     </td>
                     <td className="py-1.5 pr-3 whitespace-nowrap">
@@ -81,7 +82,7 @@ export function AttacksTable() {
                         <button
                           type="button"
                           aria-pressed={a.usingVersatile}
-                          title="Impugnatura a una o due mani"
+                          title={m.sheet.grip}
                           onClick={() =>
                             mutate((x) => {
                               const w = x.inventory.items.find((i) => i.id === a.itemId)?.weapon;

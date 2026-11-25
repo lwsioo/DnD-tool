@@ -167,4 +167,32 @@ describe('riposi', () => {
       expect(c?.combat.hitDice[10]?.spent).toBe(1);
     });
   });
+  it('dopo il riposo lungo propone di cambiare qualcosa, e le Maestrie si cambiano lì', async () => {
+    const user = userEvent.setup();
+    const id = await openExample();
+    const before = (await charactersRepo.get(id))!.weaponMasteries;
+
+    await user.click(within(vitals()).getByRole('button', { name: /Riposo Lungo/ }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Riposo Lungo' })).getByRole('button', {
+        name: 'Completa il riposo',
+      }),
+    );
+    const after = await screen.findByRole('dialog', { name: 'Riposo Lungo completato' });
+    expect(within(after).getByRole('button', { name: /Incantesimi preparati/ })).toBeInTheDocument();
+    await user.click(within(after).getByRole('button', { name: /Maestrie nelle armi/ }));
+
+    const picker = await screen.findByRole('dialog', { name: 'Maestrie nelle armi' });
+    expect(picker).toHaveTextContent(`${before.length} di 2 armi con Maestria`);
+    // Al limite le altre armi sono bloccate: se ne toglie una e se ne sceglie un'altra.
+    await user.click(within(picker).getByRole('checkbox', { name: /^Spada Lunga ·/ }));
+    await user.click(within(picker).getByRole('checkbox', { name: /^Lancia ·/ }));
+    await user.click(within(picker).getByRole('button', { name: 'Salva' }));
+    await waitFor(async () => {
+      const c = await charactersRepo.get(id);
+      expect(c?.weaponMasteries).toContain('spear');
+      expect(c?.weaponMasteries).not.toContain('longsword');
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
 });

@@ -5,6 +5,7 @@ import { formatBonus } from '@/lib/dice';
 import { NumberField } from '@/ui/fields';
 import { Explained, Panel, ProfMarker, RollBadge } from './parts';
 import { useSheet } from './SheetContext';
+import { m } from '@/i18n';
 
 /** Giro delle competenze in modalità Modifica. Abilità: nessuna → competenza → maestria → metà → nessuna. */
 const nextSkillProf = (p: ProfLevel): ProfLevel => (({ 0: 1, 1: 2, 2: 0.5, 0.5: 0 }) as const)[p];
@@ -14,7 +15,7 @@ export function AbilityGrid() {
   const { character: c, derived: d, edit, mutateLater } = useSheet();
   return (
     <section
-      aria-label="Caratteristiche"
+      aria-label={m.sheet.abilities}
       className="grid grid-cols-3 gap-2 @lg:grid-cols-6 @2xl:grid-cols-2 @5xl:grid-cols-1"
     >
       {ABILITIES.map((ab) => {
@@ -31,7 +32,7 @@ export function AbilityGrid() {
             {edit ? (
               <span className="flex items-center gap-1">
                 <NumberField
-                  label={`${ABILITY_LABELS[ab].long} base`}
+                  label={m.sheet.abilityBase(ABILITY_LABELS[ab].long)}
                   value={c.abilities[ab].base}
                   min={1}
                   max={30}
@@ -39,7 +40,7 @@ export function AbilityGrid() {
                   onValue={(v) => mutateLater(`ability.${ab}.base`, (x) => void (x.abilities[ab].base = v))}
                 />
                 <NumberField
-                  label={`${ABILITY_LABELS[ab].long} incrementi`}
+                  label={m.sheet.abilityBonus(ABILITY_LABELS[ab].long)}
                   value={c.abilities[ab].bonus}
                   min={-10}
                   max={10}
@@ -97,7 +98,7 @@ function RollRow({
 export function SavesList() {
   const { character: c, derived: d, edit, mutate } = useSheet();
   return (
-    <Panel title="Tiri salvezza">
+    <Panel title={m.sheet.saves}>
       <ul className="space-y-0.5">
         {ABILITIES.map((ab: Ability) => (
           <RollRow
@@ -116,7 +117,7 @@ export function SavesList() {
 export function SkillsList() {
   const { character: c, derived: d, edit, mutate } = useSheet();
   return (
-    <Panel title="Abilità">
+    <Panel title={m.sheet.skills}>
       <ul className="space-y-0.5">
         {SKILLS.map((s) => {
           const stat = d.skills[s];
@@ -137,7 +138,7 @@ export function SkillsList() {
         })}
       </ul>
       <p className="mt-2 text-[11px] text-muted">
-        Passive: Indagare {d.passive.investigation.total} · Intuizione {d.passive.insight.total}
+        {m.sheet.passives(d.passive.investigation.total, d.passive.insight.total)}
       </p>
     </Panel>
   );

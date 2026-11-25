@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from './Button';
 import { Dialog } from './Dialog';
+import { m } from '@/i18n';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -30,7 +31,7 @@ export function ConfirmDialog({
       footer={
         <>
           <Button variant="ghost" onClick={onCancel}>
-            Annulla
+            {m.common.cancel}
           </Button>
           <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm} data-autofocus>
             {confirmLabel}

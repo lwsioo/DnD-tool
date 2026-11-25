@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm';
 import { parseRuleHref, RULE_HREF } from '@/features/inspector/refs';
 import { remarkWikilink, WIKI_SCHEME } from '@/features/wiki/wikilink/remarkWikilink';
 import { WikiLinkView } from '@/features/wiki/wikilink/WikiLinkView';
+import { pick } from '@/i18n';
 import { cn } from '@/lib/cn';
 import { useUiStore } from '@/stores/uiStore';
 
@@ -32,7 +33,7 @@ function InternalOrExternalLink({ href, children }: { href?: string; children?: 
   if (href && RULE_HREF.test(href)) {
     // Link interno a una regola inesistente: testo semplice segnalato.
     return (
-      <span className="text-danger" title="Riferimento non trovato">
+      <span className="text-danger" title={pick('Riferimento non trovato', 'Reference not found')}>
         {children}
       </span>
     );

@@ -8,18 +8,29 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { ChevronDown, ChevronRight, GripVertical, Link2, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Coins, GripVertical, Link2, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import type { Character } from '@/domain/character';
 import type { InventoryItem } from '@/domain/items';
 import type { CharacterRecipe } from '@/db/repos/characters';
 import { ITEM_KIND_LABELS } from '@/features/inspector/format';
 import { cn } from '@/lib/cn';
-import { formatWeight, type Units } from '@/lib/units';
+import { formatCost, formatWeight, type Units } from '@/lib/units';
 import { toast } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore';
 import { IconButton } from '@/ui/IconButton';
 import { NumberField } from '@/ui/fields';
-import { descendantIds, moveItem, removeItem, setEquipped, treeOrder, validTargets } from './itemActions';
+import {
+  descendantIds,
+  moveItem,
+  removeItem,
+  sellItem,
+  setEquipped,
+  treeOrder,
+  validTargets,
+} from './itemActions';
+import { SellDialog } from './SellDialog';
+import { m } from '@/i18n';
 
 const EQUIPPABLE = new Set(['weapon', 'armor', 'shield', 'focus', 'gear', 'tool']);
 const ROOT_ID = '__root__';
@@ -55,7 +66,7 @@ export function ItemTree({ character, units, mutate, onEdit }: ItemTreeProps) {
   };
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted">Inventario vuoto. Aggiungi un oggetto, o partine da uno SRD.</p>;
+    return <p className="text-sm text-muted">{m.inventory.empty}</p>;
   }
 
   return (
@@ -91,7 +102,7 @@ function RootDrop() {
         isOver && 'border-accent bg-accent-soft text-accent',
       )}
     >
-      Rilascia qui per portarlo addosso (fuori dai contenitori)
+      {m.inventory.dropHere}
     </div>
   );
 }
@@ -122,14 +133,33 @@ function ItemRow({
       if (t) recipe(t);
     });
 
+  const [selling, setSelling] = useState(false);
+  const sell = (quantity: number, priceCp: number) => {
+    const before = { items: character.inventory.items, currency: character.inventory.currency };
+    setSelling(false);
+    mutate((d) => sellItem(d, item.id, quantity, priceCp));
+    toast({
+      tone: 'success',
+      message: m.inventory.sold(quantity, item.name, formatCost(priceCp)),
+      action: {
+        label: m.common.undo,
+        onClick: () =>
+          mutate((d) => {
+            d.inventory.items = before.items;
+            d.inventory.currency = before.currency;
+          }),
+      },
+    });
+  };
+
   const remove = () => {
     // La scrittura è asincrona: `removed` si riempie quando la ricetta viene applicata, prima di un eventuale Annulla.
     let removed: InventoryItem[] = [];
     const count = descendantIds(character.inventory.items, item.id).size;
     mutate((d) => void (removed = removeItem(d, item.id)));
     toast({
-      message: count > 1 ? `${item.name} eliminato con il contenuto.` : `${item.name} eliminato.`,
-      action: { label: 'Annulla', onClick: () => mutate((d) => void d.inventory.items.push(...removed)) },
+      message: count > 1 ? m.inventory.deletedWithContents(item.name) : m.inventory.deleted(item.name),
+      action: { label: m.common.undo, onClick: () => mutate((d) => void d.inventory.items.push(...removed)) },
     });
   };
 
@@ -153,7 +183,7 @@ function ItemRow({
         type="button"
         {...drag.listeners}
         {...drag.attributes}
-        aria-label={`Trascina ${item.name}`}
+        aria-label={m.inventory.drag(item.name)}
         className="cursor-grab text-muted hover:text-ink active:cursor-grabbing"
       >
         <GripVertical className="size-4" aria-hidden />
@@ -161,7 +191,7 @@ function ItemRow({
       {isContainer ? (
         <IconButton
           icon={item.container?.collapsed ? ChevronRight : ChevronDown}
-          label={item.container?.collapsed ? `Espandi ${item.name}` : `Comprimi ${item.name}`}
+          label={item.container?.collapsed ? m.inventory.expand(item.name) : m.inventory.collapse(item.name)}
           className="size-6"
           onClick={() => update((x) => x.container && (x.container.collapsed = !x.container.collapsed))}
         />
@@ -179,12 +209,12 @@ function ItemRow({
         </button>
         <span className="ml-2 text-[11px] text-muted">{ITEM_KIND_LABELS[item.kind]}</span>
         {item.attunement === 'attuned' && (
-          <span className="ml-1 text-[11px] text-accent">· sintonizzato</span>
+          <span className="ml-1 text-[11px] text-accent">{m.inventory.attuned}</span>
         )}
       </div>
 
       <NumberField
-        label={`Quantità ${item.name}`}
+        label={m.inventory.quantityOf(item.name)}
         value={item.quantity}
         min={0}
         max={9999}
@@ -200,8 +230,8 @@ function ItemRow({
           type="button"
           role="switch"
           aria-checked={item.attunement === 'attuned'}
-          aria-label={`Sintonia con ${item.name}`}
-          title="Sintonia"
+          aria-label={m.inventory.attuneWith(item.name)}
+          title={m.inventory.attunementField}
           onClick={() =>
             update((x) => void (x.attunement = x.attunement === 'attuned' ? 'required' : 'attuned'))
           }
@@ -219,10 +249,10 @@ function ItemRow({
           type="button"
           role="switch"
           aria-checked={item.equipped}
-          aria-label={`${item.name} equipaggiato`}
+          aria-label={m.inventory.equippedAria(item.name)}
           onClick={() => mutate((d) => setEquipped(d, item.id, !item.equipped))}
           disabled={item.parentId !== null}
-          title={item.parentId !== null ? 'Toglilo dal contenitore per equipaggiarlo' : undefined}
+          title={item.parentId !== null ? m.inventory.removeFromContainer : undefined}
           className={cn(
             'rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-40',
             item.equipped
@@ -230,12 +260,12 @@ function ItemRow({
               : 'border-line text-muted hover:text-ink',
           )}
         >
-          {item.equipped ? 'Equipaggiato' : 'Equipaggia'}
+          {item.equipped ? m.inventory.equipped : m.inventory.equip}
         </button>
       )}
 
       <select
-        aria-label={`Sposta ${item.name}`}
+        aria-label={m.inventory.move(item.name)}
         value={item.parentId ?? ''}
         onChange={(e) => {
           // Il valore va letto subito: la scrittura è asincrona e React riporta la select al valore controllato.
@@ -244,16 +274,25 @@ function ItemRow({
         }}
         className="max-w-32 rounded border border-line bg-bg px-1 py-0.5 text-xs text-muted"
       >
-        <option value="">Addosso</option>
+        <option value="">{m.inventory.onPerson}</option>
         {targets.map((t) => (
           <option key={t.id} value={t.id}>
-            In: {t.name}
+            {m.inventory.inContainer(t.name)}
           </option>
         ))}
       </select>
 
-      <IconButton icon={Pencil} label={`Modifica ${item.name}`} onClick={onEdit} />
-      <IconButton icon={Trash2} label={`Elimina ${item.name}`} onClick={remove} />
+      <IconButton icon={Pencil} label={m.inventory.edit(item.name)} onClick={onEdit} />
+      <IconButton icon={Coins} label={m.inventory.sell(item.name)} onClick={() => setSelling(true)} />
+      <IconButton icon={Trash2} label={m.inventory.delete(item.name)} onClick={remove} />
+      {selling && (
+        <SellDialog
+          item={item}
+          contents={descendantIds(character.inventory.items, item.id).size - 1}
+          onSell={sell}
+          onClose={() => setSelling(false)}
+        />
+      )}
     </li>
   );
 }

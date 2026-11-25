@@ -6,6 +6,7 @@ import { toast } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore';
 import { Button } from '@/ui/Button';
 import { DAY, exportFullBackupToFile, shouldRemindBackup } from './actions';
+import { m } from '@/i18n';
 
 /** Fascia discreta sotto la barra in alto: i dati vivono solo nel browser, un backup ogni tanto li protegge. */
 export function BackupReminder() {
@@ -22,22 +23,22 @@ export function BackupReminder() {
     >
       <DatabaseBackup className="size-4 text-accent" aria-hidden />
       <span className="flex-1">
-        {days === null ? 'Non hai ancora fatto un backup.' : `Ultimo backup ${days} giorni fa.`} I dati sono
-        salvati solo in questo browser.
+        {days === null ? m.app.backupReminder.never : m.app.backupReminder.daysAgo(days)}{' '}
+        {m.app.backupReminder.onlyHere}
       </span>
       <Button
         size="sm"
         variant="primary"
         onClick={() =>
           void exportFullBackupToFile().then((name) =>
-            toast({ tone: 'success', message: `Backup scaricato: ${name}` }),
+            toast({ tone: 'success', message: m.app.backupReminder.downloaded(name) }),
           )
         }
       >
-        Esporta ora
+        {m.app.backupReminder.exportNow}
       </Button>
       <Button size="sm" variant="ghost" onClick={() => useUiStore.getState().snoozeBackupReminder(7)}>
-        Più tardi
+        {m.app.backupReminder.later}
       </Button>
     </div>
   );

@@ -12,6 +12,7 @@ import { Tabs } from '@/ui/Tabs';
 import { FeatureEditor } from './FeatureEditor';
 import { ProficienciesPanel } from './ProficienciesPanel';
 import { useSheet } from './SheetContext';
+import { m } from '@/i18n';
 
 type TabKey = 'class' | 'species' | 'feats' | 'proficiencies';
 
@@ -34,16 +35,16 @@ export function FeaturesPanel() {
     c.features.filter((f) => TAB_CATEGORIES[k].includes(f.category)).length;
 
   return (
-    <section aria-label="Privilegi e competenze" className="rounded-xl border border-line bg-panel p-4">
+    <section aria-label={m.sheet.featuresRegion} className="rounded-xl border border-line bg-panel p-4">
       <Tabs
-        label="Privilegi e competenze"
+        label={m.sheet.featuresRegion}
         active={tab}
         onChange={setTab}
         tabs={[
-          { key: 'class', label: 'Privilegi di Classe', count: count('class') },
-          { key: 'species', label: 'Tratti della Specie', count: count('species') },
-          { key: 'feats', label: 'Talenti e Background', count: count('feats') },
-          { key: 'proficiencies', label: 'Competenze e Lingue' },
+          { key: 'class', label: m.sheet.tabClass, count: count('class') },
+          { key: 'species', label: m.sheet.tabSpecies, count: count('species') },
+          { key: 'feats', label: m.sheet.tabFeats, count: count('feats') },
+          { key: 'proficiencies', label: m.sheet.tabProficiencies },
         ]}
       >
         {tab === 'proficiencies' ? <ProficienciesPanel /> : <FeatureList tab={tab} />}
@@ -70,7 +71,8 @@ function FeatureList({ tab }: { tab: Exclude<TabKey, 'proficiencies'> }) {
     <div className="space-y-2">
       {features.length === 0 && (
         <p className="text-sm text-muted">
-          Nessuna voce.{edit ? '' : ' Passa in modalità Modifica per aggiungerne.'}
+          {m.sheet.noEntries}
+          {edit ? '' : m.sheet.editToAdd}
         </p>
       )}
       <ul className="divide-y divide-line">
@@ -85,7 +87,7 @@ function FeatureList({ tab }: { tab: Exclude<TabKey, 'proficiencies'> }) {
       </ul>
       {edit && (
         <Button size="sm" icon={Plus} onClick={() => setEditing('new')}>
-          Aggiungi
+          {m.common.add}
         </Button>
       )}
       {editing && (
@@ -137,22 +139,22 @@ function FeatureRow({
           type="button"
           role="switch"
           aria-checked={f.active}
-          aria-label={`${f.name} attivo`}
+          aria-label={m.sheet.featureActive(f.name)}
           onClick={() => update((x) => void (x.active = !x.active))}
           className={cn(
             'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
             f.active ? 'border-accent bg-accent text-accent-ink' : 'border-line text-muted hover:text-ink',
           )}
         >
-          {f.active ? 'Attivo' : 'Non attivo'}
+          {f.active ? m.sheet.active : m.sheet.inactive}
         </button>
       )}
 
       {f.uses &&
         resource &&
         (resource.formulaError ? (
-          <span className="text-xs text-danger" title={`Formula non valida: ${f.uses.max}`}>
-            formula non valida
+          <span className="text-xs text-danger" title={m.sheet.invalidFormula(f.uses.max)}>
+            {m.sheet.invalidFormulaShort}
           </span>
         ) : (
           <UsesCounter
@@ -165,17 +167,17 @@ function FeatureRow({
 
       {edit && (
         <span className="flex">
-          <IconButton icon={Pencil} label={`Modifica ${f.name}`} onClick={onEdit} />
+          <IconButton icon={Pencil} label={m.sheet.editX(f.name)} onClick={onEdit} />
           <IconButton
             icon={Trash2}
-            label={`Elimina ${f.name}`}
+            label={m.sheet.deleteX(f.name)}
             onClick={() => {
               const index = c.features.findIndex((y) => y.id === f.id);
               mutate((d) => void (d.features = d.features.filter((y) => y.id !== f.id)));
               toast({
-                message: `${f.name} eliminato.`,
+                message: m.sheet.deleted(f.name),
                 action: {
-                  label: 'Annulla',
+                  label: m.common.undo,
                   onClick: () => mutate((d) => void d.features.splice(Math.max(0, index), 0, f)),
                 },
               });

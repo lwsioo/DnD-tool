@@ -2,6 +2,7 @@ import { ABILITIES, type Ability } from '@/domain/abilities';
 import type { Character } from '@/domain/character';
 import { evaluateOr, type FormulaVars } from './formula';
 import type { ActiveEffect, Part } from './types';
+import { m } from '@/i18n';
 
 export const MAX_SCORE = 30;
 
@@ -30,8 +31,8 @@ export function computeAbilities(
 
   for (const ab of ABILITIES) {
     const { base, bonus } = c.abilities[ab];
-    const parts: Part[] = [{ label: 'Base', value: base }];
-    if (bonus) parts.push({ label: 'Incrementi', value: bonus });
+    const parts: Part[] = [{ label: m.engine.base, value: base }];
+    if (bonus) parts.push({ label: m.engine.increases, value: bonus });
 
     const relevant = effects.filter((e) => e.target === `score.${ab}`);
     for (const e of relevant.filter((x) => x.op === 'add')) {
@@ -43,12 +44,12 @@ export function computeAbilities(
     for (const e of relevant.filter((x) => x.op === 'set')) {
       const v = Math.trunc(evaluateOr(e.value, vars));
       if (v > score) {
-        parts.push({ label: `${e.source} (fissa ${v})`, value: v - score });
+        parts.push({ label: m.engine.fixedScore(e.source, v), value: v - score });
         score = v;
       }
     }
     if (score > MAX_SCORE) {
-      parts.push({ label: `Massimo ${MAX_SCORE}`, value: MAX_SCORE - score });
+      parts.push({ label: m.engine.maxScore(MAX_SCORE), value: MAX_SCORE - score });
       score = MAX_SCORE;
     }
     out[ab] = { score, mod: abilityMod(score), parts };

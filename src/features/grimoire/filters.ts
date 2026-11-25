@@ -1,16 +1,19 @@
 import type { CharacterSpell, CharacterSpellStatus } from '@/domain/character';
 import type { Spell } from '@/domain/spells';
 import { normalizeKey } from '@/lib/normalizeKey';
+import { canonicalClass } from '@/data/srd/classes';
 
 export interface SpellFilters {
   levels: number[];
   statuses: CharacterSpellStatus[];
   /** C = concentrazione, R = rituale, M = componente materiale. */
   tags: Array<'C' | 'R' | 'M'>;
+  /** Classi (es. «Stregone»): l'incantesimo deve essere nella lista di almeno una. Assente nei filtri salvati prima. */
+  classes?: string[];
   text: string;
 }
 
-export const EMPTY_FILTERS: SpellFilters = { levels: [], statuses: [], tags: [], text: '' };
+export const EMPTY_FILTERS: SpellFilters = { levels: [], statuses: [], tags: [], classes: [], text: '' };
 
 export interface SpellEntry {
   cs: CharacterSpell;
@@ -30,6 +33,10 @@ export function filterSpells(entries: SpellEntry[], f: SpellFilters): SpellEntry
         M: spell.components.m,
       };
       if (!f.tags.some((t) => has[t])) return false;
+    }
+    if (f.classes?.length) {
+      const wanted = f.classes.map(canonicalClass);
+      if (!spell.classes.some((cl) => wanted.includes(canonicalClass(cl)))) return false;
     }
     if (q && !spell.nameKey.includes(q) && !normalizeKey(spell.nameEn ?? '').includes(q)) return false;
     return true;

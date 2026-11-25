@@ -4,6 +4,7 @@ import type { Character } from '@/domain/character';
 import { addParts, type EquipmentState } from './effects';
 import { evaluateOr, type FormulaVars } from './formula';
 import type { ActiveEffect, Breakdown, Part } from './types';
+import { m } from '@/i18n';
 
 export const SHIELD_DEFAULT_BONUS = 2;
 
@@ -38,8 +39,8 @@ export function computeArmorClass(
   if (c.combat.acOverride !== undefined) {
     return {
       total: c.combat.acOverride,
-      parts: [{ label: 'Valore manuale', value: c.combat.acOverride }],
-      basis: 'Valore manuale',
+      parts: [{ label: m.engine.manualValue, value: c.combat.acOverride }],
+      basis: m.engine.manualValue,
       override: true,
       shieldIgnored: false,
     };
@@ -50,7 +51,7 @@ export function computeArmorClass(
   if (eq.armor && armor) {
     const dex = armor.dexCap === null ? mods.dex : Math.min(mods.dex, armor.dexCap);
     const parts: Part[] = [{ label: eq.armor.name, value: armor.baseAc }];
-    if (armor.magicBonus) parts.push({ label: 'Bonus magico armatura', value: armor.magicBonus });
+    if (armor.magicBonus) parts.push({ label: m.engine.armorMagic, value: armor.magicBonus });
     if (dex)
       parts.push({
         label: armor.dexCap === null ? dexLabel : `${dexLabel} (max ${armor.dexCap})`,
@@ -59,9 +60,9 @@ export function computeArmorClass(
     candidates.push({ basis: eq.armor.name, parts });
   } else {
     candidates.push({
-      basis: 'Senza armatura',
+      basis: m.engine.unarmored,
       parts: [
-        { label: 'Senza armatura', value: 10 },
+        { label: m.engine.unarmored, value: 10 },
         ...(mods.dex ? [{ label: dexLabel, value: mods.dex }] : []),
       ],
     });

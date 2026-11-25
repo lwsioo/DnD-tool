@@ -1,5 +1,6 @@
+import { pick } from '@/i18n/locale';
 /** Lingue standard e rare (SRD 5.2). */
-export const STANDARD_LANGUAGES = [
+const STANDARD_IT = [
   'Comune',
   'Linguaggio dei Segni Comune',
   'Draconico',
@@ -12,7 +13,7 @@ export const STANDARD_LANGUAGES = [
   'Orchesco',
 ] as const;
 
-export const RARE_LANGUAGES = [
+const RARE_IT = [
   'Abissale',
   'Celestiale',
   'Druidico',
@@ -24,7 +25,33 @@ export const RARE_LANGUAGES = [
   'Sottocomune',
 ] as const;
 
-export const DAMAGE_TYPE_LABELS = {
+/** Lingue standard e rare nella lingua attiva. */
+export const STANDARD_LANGUAGES: readonly string[] = pick<readonly string[]>(STANDARD_IT, [
+  'Common',
+  'Common Sign Language',
+  'Draconic',
+  'Elvish',
+  'Giant',
+  'Gnomish',
+  'Goblin',
+  'Halfling',
+  'Dwarvish',
+  'Orc',
+]);
+
+export const RARE_LANGUAGES: readonly string[] = pick<readonly string[]>(RARE_IT, [
+  'Abyssal',
+  'Celestial',
+  'Druidic',
+  "Thieves' Cant",
+  'Deep Speech',
+  'Infernal',
+  'Primordial',
+  'Sylvan',
+  'Undercommon',
+]);
+
+const DAMAGE_TYPE_LABELS_IT = {
   acid: 'acido',
   bludgeoning: 'contundente',
   cold: 'freddo',
@@ -39,3 +66,21 @@ export const DAMAGE_TYPE_LABELS = {
   slashing: 'tagliente',
   thunder: 'tuono',
 } as const;
+
+export const DAMAGE_TYPE_LABELS: Record<keyof typeof DAMAGE_TYPE_LABELS_IT, string> = pick<
+  Record<keyof typeof DAMAGE_TYPE_LABELS_IT, string>
+>(DAMAGE_TYPE_LABELS_IT, {
+  acid: 'acid',
+  bludgeoning: 'bludgeoning',
+  cold: 'cold',
+  fire: 'fire',
+  force: 'force',
+  lightning: 'lightning',
+  necrotic: 'necrotic',
+  piercing: 'piercing',
+  poison: 'poison',
+  psychic: 'psychic',
+  radiant: 'radiant',
+  slashing: 'slashing',
+  thunder: 'thunder',
+});

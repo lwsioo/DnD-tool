@@ -1,5 +1,7 @@
 import type { BackgroundDef, FeatDef, OriginTrait, SpeciesDef, SpeciesOption } from '@/domain/origins';
 import type { DamageType } from '@/domain/primitives';
+import { LOCALE } from '@/i18n/locale';
+import { BACKGROUNDS_EN, FEATS_EN, SPECIES_EN, type TraitEn } from './origins.en';
 
 /**
  * Specie, background e talenti d'origine del System Reference Document 5.2 (CC-BY-4.0),
@@ -87,7 +89,7 @@ const GIANTS: Array<[string, string, string, string]> = [
   ],
 ];
 
-export const SRD_SPECIES: SpeciesDef[] = [
+const SRD_SPECIES_IT: SpeciesDef[] = [
   {
     id: 'srd-dragonborn',
     name: 'Dragonide',
@@ -455,7 +457,7 @@ export const SRD_SPECIES: SpeciesDef[] = [
 
 // ── Talenti d'origine ───────────────────────────────────────────────────────────────────
 
-export const SRD_FEATS: FeatDef[] = [
+const SRD_FEATS_IT: FeatDef[] = [
   {
     id: 'srd-feat-alert',
     name: 'Allerta',
@@ -505,7 +507,7 @@ export const SRD_FEATS: FeatDef[] = [
 
 // ── Background ──────────────────────────────────────────────────────────────────────────
 
-export const SRD_BACKGROUNDS: BackgroundDef[] = [
+const SRD_BACKGROUNDS_IT: BackgroundDef[] = [
   {
     id: 'srd-bg-acolyte',
     name: 'Accolito',
@@ -595,3 +597,56 @@ export const SRD_BACKGROUNDS: BackgroundDef[] = [
     description: 'Ti sei addestrato in un esercito o in una milizia, imparando disciplina e tattica.',
   },
 ];
+
+// ── Lingua ─────────────────────────────────────────────────────────────────────────────
+
+const traitsEn = (traits: OriginTrait[], en: TraitEn[]): OriginTrait[] =>
+  traits.map((t, i) => ({ ...t, ...(en[i] ?? {}) }));
+
+function speciesEn(s: SpeciesDef): SpeciesDef {
+  const en = SPECIES_EN[s.id];
+  if (!en) return s;
+  return {
+    ...s,
+    name: s.nameEn ?? s.name,
+    description: en.description ?? s.description,
+    traits: traitsEn(s.traits, en.traits),
+    choice: s.choice && {
+      label: en.choiceLabel ?? s.choice.label,
+      options: s.choice.options.map((o) => {
+        const oe = en.options?.[o.key];
+        return oe ? { ...o, name: oe.name, traits: traitsEn(o.traits, oe.traits) } : o;
+      }),
+    },
+  };
+}
+
+function backgroundEn(b: BackgroundDef): BackgroundDef {
+  const en = BACKGROUNDS_EN[b.id];
+  if (!en) return b;
+  return {
+    ...b,
+    name: b.nameEn ?? b.name,
+    featName: en.featName ?? b.featName,
+    tools: en.tools,
+    equipment: b.equipment.map((e, i) => ({ ...e, name: en.equipment[i] ?? e.name })),
+    description: en.description,
+  };
+}
+
+function featEn(f: FeatDef): FeatDef {
+  const en = FEATS_EN[f.id];
+  if (!en) return f;
+  return {
+    ...f,
+    name: f.nameEn ?? f.name,
+    description: en.description,
+    spellLists: en.spellLists ?? f.spellLists,
+  };
+}
+
+/** Specie, talenti e background SRD nella lingua attiva. */
+export const SRD_SPECIES: SpeciesDef[] = LOCALE === 'en' ? SRD_SPECIES_IT.map(speciesEn) : SRD_SPECIES_IT;
+export const SRD_FEATS: FeatDef[] = LOCALE === 'en' ? SRD_FEATS_IT.map(featEn) : SRD_FEATS_IT;
+export const SRD_BACKGROUNDS: BackgroundDef[] =
+  LOCALE === 'en' ? SRD_BACKGROUNDS_IT.map(backgroundEn) : SRD_BACKGROUNDS_IT;

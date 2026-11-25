@@ -11,6 +11,7 @@ import { HpWidget } from './HpWidget';
 import { LongRestDialog, ShortRestDialog } from './RestDialogs';
 import { VitalsContext, type VitalsContextValue } from './VitalsContext';
 import { AcWidget, ConcentrationRow, ResourcesWidget, SlotsWidget } from './Widgets';
+import { m } from '@/i18n';
 
 /** Widget fissi della barra laterale per il personaggio attivo: PF, CA, slot, risorse, riposi. */
 export function VitalsPanel() {
@@ -18,7 +19,7 @@ export function VitalsPanel() {
   if (active.status !== 'ready') {
     return (
       <p className="rounded-lg border border-dashed border-line p-3 text-xs text-muted">
-        {active.status === 'loading' ? '…' : 'Nessun personaggio attivo.'}
+        {active.status === 'loading' ? '…' : m.vitals.noActive}
       </p>
     );
   }
@@ -45,7 +46,7 @@ function Vitals({ character }: { character: Character }) {
 
   return (
     <VitalsContext.Provider value={ctx}>
-      <div aria-label="Vitali" role="region" className="space-y-2.5">
+      <div aria-label={m.vitals.region} role="region" className="space-y-2.5">
         <HpWidget />
         <AcWidget />
         <ConcentrationRow />
@@ -57,14 +58,14 @@ function Vitals({ character }: { character: Character }) {
             onClick={() => setRest('short')}
             className="flex items-center justify-center gap-1.5 rounded-md border border-line py-1.5 text-xs text-muted transition-colors hover:border-accent/50 hover:text-ink"
           >
-            <Moon className="size-3.5" aria-hidden /> Riposo Breve
+            <Moon className="size-3.5" aria-hidden /> {m.vitals.shortRest}
           </button>
           <button
             type="button"
             onClick={() => setRest('long')}
             className="flex items-center justify-center gap-1.5 rounded-md border border-line py-1.5 text-xs text-muted transition-colors hover:border-accent/50 hover:text-ink"
           >
-            <Sun className="size-3.5" aria-hidden /> Riposo Lungo
+            <Sun className="size-3.5" aria-hidden /> {m.vitals.longRest}
           </button>
         </div>
       </div>

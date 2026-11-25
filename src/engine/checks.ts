@@ -4,11 +4,12 @@ import type { EffectTarget } from '@/domain/effects';
 import { addParts, grantedProficiency, rollModeFor } from './effects';
 import type { FormulaVars } from './formula';
 import type { ActiveEffect, Part, RollStat } from './types';
+import { m } from '@/i18n';
 
 const PROF_LABEL: Record<Exclude<ProfLevel, 0>, string> = {
-  0.5: 'Metà competenza',
-  1: 'Competenza',
-  2: 'Maestria',
+  0.5: m.engine.halfProficiency,
+  1: m.engine.proficiency,
+  2: m.engine.expertise,
 };
 
 export function profPart(pb: number, prof: ProfLevel): Part | null {
@@ -33,7 +34,7 @@ interface RollInput {
 
 function computeRoll(input: RollInput): RollStat {
   const prof = maxProf(input.baseProf, grantedProficiency(input.effects, input.profTarget));
-  const parts: Part[] = [{ label: `Mod. ${ABILITY_LABELS[input.ability].short}`, value: input.mod }];
+  const parts: Part[] = [{ label: m.engine.mod(ABILITY_LABELS[input.ability].short), value: input.mod }];
   const p = profPart(input.pb, prof);
   if (p) parts.push(p);
   parts.push(...addParts(input.effects, input.targets, input.vars));
@@ -100,11 +101,11 @@ export function passiveScore(
   skillKey: SkillKey,
 ) {
   const parts: Part[] = [
-    { label: 'Base', value: 10 },
+    { label: m.engine.base, value: 10 },
     { label: SKILL_LABELS[skillKey], value: skill.total },
   ];
-  if (skill.mode === 'advantage') parts.push({ label: 'Vantaggio', value: 5 });
-  if (skill.mode === 'disadvantage') parts.push({ label: 'Svantaggio', value: -5 });
+  if (skill.mode === 'advantage') parts.push({ label: m.engine.advantage, value: 5 });
+  if (skill.mode === 'disadvantage') parts.push({ label: m.engine.disadvantage, value: -5 });
   if (skillKey === 'perception') parts.push(...addParts(effects, ['passive.perception'], vars));
   return { total: parts.reduce((a, p) => a + p.value, 0), parts };
 }

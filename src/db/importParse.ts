@@ -3,6 +3,9 @@ import { EXPORT_FORMAT } from '@/domain/exchange';
 import type { ParsedExport } from './backup';
 import { ImportError, migrateExportFile } from './migrations';
 import { exportFileSchema } from './schemas';
+import { m } from '@/i18n';
+
+const D = m.misc.db;
 
 /**
  * Lettura e validazione dei file importati. È un modulo a parte perché porta con sé zod e gli schemi:
@@ -12,11 +15,11 @@ import { exportFileSchema } from './schemas';
 
 function formatIssues(error: z.ZodError): string {
   const lines = error.issues.slice(0, 5).map((i) => {
-    const path = i.path.map(String).join('.') || '(radice)';
+    const path = i.path.map(String).join('.') || D.root;
     return `• ${path}: ${i.message}`;
   });
-  const more = error.issues.length > 5 ? `\n…e altri ${error.issues.length - 5} problemi.` : '';
-  return `Il file contiene dati non validi:\n${lines.join('\n')}${more}`;
+  const more = error.issues.length > 5 ? D.more(error.issues.length - 5) : '';
+  return D.invalidData(lines.join('\n') + more);
 }
 
 /** Legge il testo di un file JSON esportato. Lancia ImportError con un messaggio leggibile. */
@@ -25,19 +28,17 @@ export function parseImportText(text: string): ParsedExport {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new ImportError('Il file non è un JSON valido.');
+    throw new ImportError(D.notJson);
   }
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    throw new ImportError('Formato non riconosciuto: il file non è un export di Codex.');
+    throw new ImportError(D.notCodex);
   }
   const obj = raw as Record<string, unknown>;
   if (obj.format !== EXPORT_FORMAT) {
     if (Array.isArray(obj.spell)) {
-      throw new ImportError(
-        'Questo sembra un file di incantesimi in formato 5etools: si importa dal Grimorio (in arrivo con lo step 8).',
-      );
+      throw new ImportError(D.is5etools);
     }
-    throw new ImportError('Formato non riconosciuto: il file non è un export di Codex.');
+    throw new ImportError(D.notCodex);
   }
   const result = exportFileSchema.safeParse(migrateExportFile(obj));
   if (!result.success) throw new ImportError(formatIssues(result.error));

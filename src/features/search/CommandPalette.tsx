@@ -21,6 +21,7 @@ import { Dialog } from '@/ui/Dialog';
 import { buildCommands, filterCommands } from './commands';
 import { parseQuery, searchGrouped, type SearchHit, type SearchKind } from './searchIndex';
 import { useSearchIndex } from './useSearchIndex';
+import { m as msg } from '@/i18n';
 
 const KIND_ICONS: Record<SearchKind, typeof Search> = {
   wiki: BookOpen,
@@ -59,7 +60,7 @@ export function PaletteBody({ onClose }: { onClose: () => void }) {
     createWikiEntry: () => wiki?.requestCreate(''),
     exportBackup: () =>
       void exportFullBackupToFile().then((name) =>
-        toast({ tone: 'success', message: `Backup scaricato: ${name}` }),
+        toast({ tone: 'success', message: msg.search.backupDownloaded(name) }),
       ),
   });
   const shownCommands =
@@ -84,13 +85,13 @@ export function PaletteBody({ onClose }: { onClose: () => void }) {
   const nothing = query.trim() !== '' && parsed.mode !== 'command' && groups.length === 0 && index;
 
   return (
-    <Dialog open onClose={onClose} title="Cerca" size="lg">
+    <Dialog open onClose={onClose} title={msg.search.title} size="lg">
       <Command
         shouldFilter={false}
         value={selected}
         onValueChange={setSelected}
         onKeyDown={onKeyDown}
-        label="Ricerca globale"
+        label={msg.search.inputLabel}
         className="space-y-2"
       >
         <div className="flex items-center gap-2 rounded-md border border-line bg-bg px-2.5 focus-within:border-accent">
@@ -99,7 +100,7 @@ export function PaletteBody({ onClose }: { onClose: () => void }) {
             data-autofocus
             value={query}
             onValueChange={setQuery}
-            placeholder="Cerca voci, incantesimi, regole… ( > comandi · @ voci · # tag )"
+            placeholder={msg.search.placeholder}
             className="h-10 w-full bg-transparent text-sm outline-none"
           />
         </div>
@@ -107,10 +108,10 @@ export function PaletteBody({ onClose }: { onClose: () => void }) {
         <Command.List className="max-h-[55vh] overflow-y-auto">
           {nothing && (
             <p className="px-2.5 py-6 text-center text-sm text-muted">
-              Nessun risultato per “{parsed.text}”.
+              {msg.search.noResults(parsed.text)}
             </p>
           )}
-          {!index && query && <p className="px-2.5 py-3 text-sm text-muted">Preparo l’indice…</p>}
+          {!index && query && <p className="px-2.5 py-3 text-sm text-muted">{msg.search.preparing}</p>}
 
           {groups.map((g) => {
             const Icon = KIND_ICONS[g.kind];
@@ -133,7 +134,7 @@ export function PaletteBody({ onClose }: { onClose: () => void }) {
 
           {shownCommands.length > 0 && (
             <Command.Group
-              heading="Comandi"
+              heading={msg.search.commandsGroup}
               className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-muted [&_[cmdk-group-heading]]:uppercase"
             >
               {shownCommands.map((c) => (
@@ -156,7 +157,7 @@ export function PaletteBody({ onClose }: { onClose: () => void }) {
         </Command.List>
 
         <p className="border-t border-line pt-2 text-[11px] text-muted">
-          ↑↓ per scegliere · Invio: anteprima nel pannello · Ctrl+Invio: apri la pagina · Esc per chiudere
+          {msg.search.hint}
         </p>
       </Command>
     </Dialog>
